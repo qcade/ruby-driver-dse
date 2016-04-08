@@ -1,0 +1,14 @@
+/coverage
+/benchmark
+/tmp
+/doc
+/pkg
+/.yardoc
+/TODO.md
+/.ruby-version
+/.ruby-gemset
+/.rvmrc
+/docs
+/.sass-cache
+/venv
+/node_modules

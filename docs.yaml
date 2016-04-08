@@ -1,0 +1,28 @@
+title:    Driver for DataStax Enterprise
+summary:  A pure Ruby client for DataStax Enterprise
+#homepage: http://datastax.github.io/ruby-driver/
+sections:
+  - title:     Features
+    prefix:    /features
+    sources:
+      - type:  markdown
+        files: 'features/**/*.md'
+      - type:  gherkin
+        files: 'features/**/*.feature'
+
+  - title:     API docs
+    prefix:    /api
+    type:      yard
+    directory: ['lib', 'spec']
+    namespace: Dse
+rewrites:
+links:
+  - title: Code
+    href:  https://github.com/datastax/ruby-driver/
+  - title: Docs
+    href:  http://datastax.github.io/ruby-driver/
+  - title: Issues
+    href:  https://datastax-oss.atlassian.net/browse/RUBY/
+versions:
+  - name: v1.0.0
+    ref: TBD
