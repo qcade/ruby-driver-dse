@@ -17,15 +17,6 @@ module Dse
       @cassandra_session = cassandra_session
     end
 
-    # @private
-    def method_missing(method_name, *args, &block)
-      # If we get here, we don't have a method of our own. Forward the request to @cassandra_session.
-      # If it returns itself, we will coerce the result to return our *self* instead.
-
-      result = @cassandra_session.send(method_name, *args, &block)
-      (result == @cassandra_session) ? self : result
-    end
-
     # Execute a graph query synchronously.
     # @return [Cassandra::Result] a Cassandra result containing individual JSON results.
     def execute_graph(statement, options = nil)
@@ -52,11 +43,25 @@ module Dse
       ::Cassandra::Util.assert_type(::Hash, parameters, 'Graph parameters must be a hash') unless parameters.nil?
       parameters = parameters.to_json
 
-      graph_options = options[:graph_options].dup
-      graph_options.merge!(DEFAULT_GRAPH_OPTIONS)
+      graph_options = options[:graph_options].merge(DEFAULT_GRAPH_OPTIONS)
       payload = transform_graph_options(graph_options)
 
       @cassandra_session.execute_async(statement, payload: payload)
+    end
+
+    #### The following methods handle arbitrary delegation to the underlying session object. ####
+
+    # @private
+    def method_missing(method_name, *args, &block)
+      # If we get here, we don't have a method of our own. Forward the request to @cassandra_session.
+      # If it returns itself, we will coerce the result to return our *self* instead.
+
+      result = @cassandra_session.send(method_name, *args, &block)
+      (result == @cassandra_session) ? self : result
+    end
+
+    def respond_to?(method, include_private = false)
+      super || @cassandra_session.respond_to?(method, include_private)
     end
 
     private
