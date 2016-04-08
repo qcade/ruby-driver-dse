@@ -27,6 +27,7 @@ module Dse
     end
 
     #### The following methods handle arbitrary delegation to the underlying cluster object. ####
+    protected
 
     # @private
     def method_missing(method_name, *args, &block)

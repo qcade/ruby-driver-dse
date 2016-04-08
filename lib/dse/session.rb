@@ -17,17 +17,12 @@ module Dse
       @cassandra_session = cassandra_session
     end
 
-    # Execute a graph query synchronously.
-    # @return [Cassandra::Result] a Cassandra result containing individual JSON results.
-    def execute_graph(statement, options = nil)
-      execute_graph_async(statement, options).get
-    end
-
     # Execute a graph query asynchronously.
     # @param statement [String] a graph query
-    # @param options [Hash] (nil) a customizable set of options
-    #
+    # @param options [Hash] (nil) a customizable set of options. All of the options supported by
+    #   {Cassandra::Session#execute_async} are valid here. However, there are some extras.
     # @option options [Hash] :arguments Parameters for the graph query.
+    #    NOTE: Unlike {#execute} and {#execute_async}, this must be a hash of &lt;parameter-name,value>.
     # @option options [Hash] :graph_options Options for the DSE graph query handler.
     #  * **:graph_name** - name of the targeted graph; required unless the query is a system query.
     #  * **:graph_source** - graph traversal source (default "default")
@@ -39,17 +34,32 @@ module Dse
     # @return [Cassandra::Future<Cassandra::Result>]
     # @see http://datastax.github.io/ruby-driver/api/session/#execute_async-instance_method Cassandra::Session::execute_async for all of the core options.
     def execute_graph_async(statement, options = nil)
+      # Make our own copy of the options. The caller might want to re-use the options they provided, and we're
+      # about to do some destructive mutations/massages.
+
+      options = options.dup
       parameters = options.delete(:arguments)
-      ::Cassandra::Util.assert_type(::Hash, parameters, 'Graph parameters must be a hash') unless parameters.nil?
-      parameters = parameters.to_json
+
+      unless parameters.nil?
+        ::Cassandra::Util.assert_instance_of(::Hash, parameters, 'Graph parameters must be a hash')
+        options[:arguments] = [parameters.to_json]
+      end
 
       graph_options = options[:graph_options].merge(DEFAULT_GRAPH_OPTIONS)
-      payload = transform_graph_options(graph_options)
+      options[:payload] = transform_graph_options(graph_options)
 
-      @cassandra_session.execute_async(statement, payload: payload)
+      @cassandra_session.execute_async(statement, options)
+    end
+
+    # Execute a graph query synchronously.
+    # @see #execute_graph_async
+    # @return [Cassandra::Result] a Cassandra result containing individual JSON results.
+    def execute_graph(statement, options = nil)
+      execute_graph_async(statement, options).get
     end
 
     #### The following methods handle arbitrary delegation to the underlying session object. ####
+    protected
 
     # @private
     def method_missing(method_name, *args, &block)
@@ -60,12 +70,13 @@ module Dse
       (result == @cassandra_session) ? self : result
     end
 
+    # @private
     def respond_to?(method, include_private = false)
       super || @cassandra_session.respond_to?(method, include_private)
     end
 
     private
-
+    # @private
     def transform_graph_options(graph_options)
       # Transform the user-provided graph options (which use symbols with _'s) into a hash with string keys,
       # where the keys are hyphenated (the way the server expects them).
