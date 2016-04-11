@@ -3,11 +3,8 @@ ruby:
   - 2.3
   - jruby1.7
 cassandra:
-  - 2.0
-  - 2.1
-  - 2.2
-  - 3.0
-  - 3.4
+  - 4.8
+  - dse-5.0-eap
 os:
   - ubuntu/trusty64
 build:
@@ -26,4 +23,4 @@ build:
       fi
 
       # Run the tests
-      bundle exec rake test
+      DSE_DIR=/home/jenkins/bdp-master bundle exec rake test

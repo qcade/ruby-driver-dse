@@ -6,6 +6,8 @@ if ENV['DSE_VERSION']
     cassandra_version = '2.0.17'
   elsif ENV['DSE_VERSION'].start_with?('4.7') || ENV['DSE_VERSION'].start_with?('4.8')
     cassandra_version = '2.1.12'
+  elsif ENV['DSE_VERSION'].start_with?('5.0')
+    cassandra_version = '3.0.5'
   end
 end
 
