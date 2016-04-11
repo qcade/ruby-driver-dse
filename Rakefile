@@ -9,9 +9,9 @@ require 'bundler/gem_tasks'
 
 ENV["FAIL_FAST"] ||= 'Y'
 
-RSpec::Core::RakeTask.new(:rspec => :compile)
+RSpec::Core::RakeTask.new(:rspec)
 
-Cucumber::Rake::Task.new(:cucumber => :compile)
+Cucumber::Rake::Task.new(:cucumber)
 
 desc 'Run all tests'
 task :test => [:rspec, :integration, :cucumber]
@@ -29,18 +29,9 @@ else
   Rake::ExtensionTask.new('cassandra_murmur3')
 end
 
-Rake::TestTask.new(:integration => :compile) do |t|
+Rake::TestTask.new(:integration) do |t|
   t.libs.push "lib"
-  t.test_files = FileList['integration/*_test.rb',
-                  'integration/security/*_test.rb',
-                  'integration/load_balancing/*_test.rb',
-                  'integration/types/*_test.rb',
-                  'integration/functions/*_test.rb']
+  t.test_files = FileList['integration/*_test.rb']
   t.verbose = true
 end
 
-Rake::TestTask.new(:stress => :compile) do |t|
-  t.libs.push "lib"
-  t.test_files = FileList['integration/stress_tests/*_test.rb']
-  t.verbose = true
-end

@@ -28,7 +28,6 @@ group :test do
   gem 'os'
   gem 'minitest', '< 5.0.0'
   gem 'ansi'
-  gem 'delorean'
 end
 
 group :docs do
