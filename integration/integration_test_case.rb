@@ -21,8 +21,7 @@ require File.dirname(__FILE__) + '/../support/retry.rb'
 require File.dirname(__FILE__) + '/schema_change_listener.rb'
 require 'minitest/unit'
 require 'minitest/autorun'
-require 'cassandra'
-require 'delorean'
+require 'dse'
 require 'ansi/code'
 
 class IntegrationTestCase < MiniTest::Unit::TestCase

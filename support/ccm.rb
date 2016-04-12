@@ -20,7 +20,7 @@ require 'fileutils'
 require 'logger'
 require 'cliver'
 require 'os'
-require 'cassandra'
+require 'dse'
 
 # Cassandra Cluster Manager integration for driving a cassandra cluster from tests.
 module CCM extend self
@@ -476,7 +476,7 @@ module CCM extend self
         attempts = 1
 
         begin
-          @cluster = Cassandra.cluster(options)
+          @cluster = Dse.cluster(options)
         rescue => e
           refresh_status
           next unless @nodes.all?(&:up?)
@@ -657,6 +657,28 @@ module CCM extend self
       start
     end
 
+    def enable_dse_authentication
+      stop
+      @username = 'cassandra'
+      @password = 'cassandra'
+      @ccm.exec('updateconf', 'authenticator: com.datastax.bdp.cassandra.auth.DseAuthenticator')
+      @ccm.exec('updatedseconf',
+                'authentication_options.default_scheme: internal',
+                'authentication_options.enabled: true'
+      )
+      start
+
+      [@username, @password]
+    end
+
+    def disable_dse_authentication
+      stop
+      @ccm.exec('updateconf', 'authenticator: AllowAllAuthenticator')
+      @ccm.exec('updatedseconf', 'authentication_options.enabled: false')
+      @username = @password = nil
+      start
+    end
+
     def enable_ssl
       stop
       ssl_root = File.expand_path(File.dirname(__FILE__) + '/../support/ssl')
@@ -814,6 +836,7 @@ module CCM extend self
   @raw_version = nil
   @cassandra_version = nil
   @dse = false
+  @dse_version = nil
 
   def parse_version
     @raw_version ||= begin
@@ -839,6 +862,11 @@ module CCM extend self
       end
       version
     end
+  end
+
+  def dse_version
+    parse_version
+    @raw_version
   end
 
   def setup_cluster(no_dc = 1, no_nodes_per_dc = 3)
