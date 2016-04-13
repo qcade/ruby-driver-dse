@@ -1,10 +1,10 @@
 module Dse
   # A session is used to execute queries. In addition to executing standard CQL queries
-  # via the {http://datastax.github.io/ruby-driver/api/session/#execute-instance_method #execute} and
-  # {http://datastax.github.io/ruby-driver/api/session/#execute_async-instance_method #execute_async} methods, it
+  # via the {http://datastax.github.io/ruby-driver/api/cassandra/session/#execute-instance_method #execute} and
+  # {http://datastax.github.io/ruby-driver/api/cassandra/session/#execute_async-instance_method #execute_async} methods, it
   # executes graph queries via the {#execute_graph_async} and {#execute_graph} methods.
   #
-  # @see http://datastax.github.io/ruby-driver/api/session Cassandra::Session
+  # @see http://datastax.github.io/ruby-driver/api/cassandra/session Cassandra::Session
   class Session
     # @private
     DEFAULT_GRAPH_OPTIONS = {
@@ -32,8 +32,8 @@ module Dse
     #  * **:graph_write_consistency_level** - Write consistency level for graph query. Overrides the standard statement
     #     consistency level. Must be one of {Cassandra::CONSISTENCIES}
     # @return [Cassandra::Future<Cassandra::Result>]
-    # @see http://datastax.github.io/ruby-driver/api/session/#execute_async-instance_method Cassandra::Session::execute_async for all of the core options.
-    def execute_graph_async(statement, options = nil)
+    # @see http://datastax.github.io/ruby-driver/api/cassandra/session/#execute_async-instance_method Cassandra::Session::execute_async for all of the core options.
+    def execute_graph_async(statement, options = {})
       # Make our own copy of the options. The caller might want to re-use the options they provided, and we're
       # about to do some destructive mutations/massages.
 
@@ -45,10 +45,12 @@ module Dse
         options[:arguments] = [parameters.to_json]
       end
 
-      graph_options = options[:graph_options].merge(DEFAULT_GRAPH_OPTIONS)
+      graph_options = DEFAULT_GRAPH_OPTIONS.merge(options.delete(:graph_options) { {} })
       options[:payload] = transform_graph_options(graph_options)
 
-      @cassandra_session.execute_async(statement, options)
+      @cassandra_session.execute_async(statement, options).then do |raw_result|
+        Dse::Graph::ResultSet.new(raw_result)
+      end
     end
 
     # Execute a graph query synchronously.

@@ -1,14 +1,14 @@
 module Dse
   # Cluster represents a DSE cluster. It serves as a
   # {Dse::Session session factory} and a collection of metadata. It wraps
-  # a {http://datastax.github.io/ruby-driver/api/cluster Cassandra::Cluster} and exposes all of its functionality.
+  # a {http://datastax.github.io/ruby-driver/api/cassandra/cluster Cassandra::Cluster} and exposes all of its functionality.
   class Cluster
     # @private
     def initialize(*args)
       @delegate_cluster = Cassandra::Cluster.new(*args)
     end
 
-    # Delegates to {http://datastax.github.io/ruby-driver/api/cluster/#connect_async-instance_method Cassandra::Cluster#connect_async}
+    # Delegates to {http://datastax.github.io/ruby-driver/api/cassandra/cluster/#connect_async-instance_method Cassandra::Cluster#connect_async}
     # to connect asynchronously to a cluster, but returns a future that will resolve to a DSE session rather than
     # Cassandra session.
     # @return [Cassandra::Future<Dse::Session>]
