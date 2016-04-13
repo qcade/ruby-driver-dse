@@ -9,7 +9,7 @@ require 'cassandra'
 
 module Dse
   # Creates a {Dse::Cluster Cluster instance}, which extends Cassandra::Cluster
-  # <http://datastax.github.io/ruby-driver/api/cluster>`.
+  # <http://datastax.github.io/ruby-driver/api/cassandra/cluster>`.
   # The API is identical, except that it returns a `Dse::Session` (see below).
   #
   # @example Connecting to localhost
@@ -48,3 +48,9 @@ end
 require 'dse/cluster'
 require 'dse/session'
 require 'dse/version'
+require 'dse/graph/edge'
+require 'dse/graph/path'
+require 'dse/graph/result'
+require 'dse/graph/result_set'
+require 'dse/graph/vertex'
+require 'dse/graph/vertex_property'
