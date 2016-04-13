@@ -26,10 +26,11 @@ module Dse
     # @option options [Hash] :graph_options Options for the DSE graph query handler.
     #  * **:graph_name** - name of the targeted graph; required unless the query is a system query.
     #  * **:graph_source** - graph traversal source (default "default")
+    #  * **:graph_alias** - alias to use for the graph traversal object (default "g")
     #  * **:graph_language** - language used in the query (default "gremlin-groovy")
-    #  * **:graph_read_consistency_level** - Read consistency level for graph query. Overrides the standard statement
+    #  * **:graph_read_consistency** - Read consistency level for graph query. Overrides the standard statement
     #     consistency level. Must be one of {Cassandra::CONSISTENCIES}
-    #  * **:graph_write_consistency_level** - Write consistency level for graph query. Overrides the standard statement
+    #  * **:graph_write_consistency** - Write consistency level for graph query. Overrides the standard statement
     #     consistency level. Must be one of {Cassandra::CONSISTENCIES}
     # @return [Cassandra::Future<Cassandra::Result>]
     # @see http://datastax.github.io/ruby-driver/api/cassandra/session/#execute_async-instance_method Cassandra::Session::execute_async for all of the core options.
@@ -56,7 +57,7 @@ module Dse
     # Execute a graph query synchronously.
     # @see #execute_graph_async
     # @return [Cassandra::Result] a Cassandra result containing individual JSON results.
-    def execute_graph(statement, options = nil)
+    def execute_graph(statement, options = {})
       execute_graph_async(statement, options).get
     end
 
