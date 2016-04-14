@@ -45,6 +45,7 @@ module Dse
         other.is_a?(VertexProperty) && \
         @id == other.id
       end
+      alias == eql?
 
       # @private
       def hash

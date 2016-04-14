@@ -62,6 +62,7 @@ module Dse
         other.is_a?(Result) && \
         @value == other.value
       end
+      alias == eql?
 
       # @private
       def hash

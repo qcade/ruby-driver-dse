@@ -28,6 +28,7 @@ module Dse
         @labels == other.labels && \
         @objects == other.objects
       end
+      alias == eql?
 
       # @private
       def hash

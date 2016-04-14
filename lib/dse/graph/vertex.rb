@@ -89,6 +89,7 @@ module Dse
         other.is_a?(Vertex) && \
         @id == other.id
       end
+      alias == eql?
 
       # @private
       def hash

@@ -55,6 +55,7 @@ module Dse
         other.is_a?(Edge) && \
         @id == other.id
       end
+      alias == eql?
 
       # @private
       def hash
