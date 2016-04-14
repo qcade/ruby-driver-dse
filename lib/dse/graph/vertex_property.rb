@@ -43,7 +43,7 @@ module Dse
       def eql?(other)
         # id's are unique among graph objects, so we only need to compare id's to test for equality.
         other.is_a?(VertexProperty) && \
-        @id == other.id
+          @id == other.id
       end
       alias == eql?
 

@@ -69,9 +69,7 @@ module Dse
           # Add a 'values' method to the array to get the values of each prop
           # in one array.
           def vertex_props.values
-            self.map do |v|
-              v.value
-            end
+            map(&:value)
           end
 
           @properties[prop_name] = vertex_props
@@ -87,7 +85,7 @@ module Dse
       def eql?(other)
         # id's are unique among graph objects, so we only need to compare id's to test for equality.
         other.is_a?(Vertex) && \
-        @id == other.id
+          @id == other.id
       end
       alias == eql?
 

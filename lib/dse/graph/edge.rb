@@ -17,31 +17,31 @@ module Dse
       # @return [Hash<String, String>] properties of this edge
       attr_reader :properties
       # @return [String] id of the "to" vertex of the edge
-      attr_reader :inV
+      attr_reader :in_v
       # @return [String] label of the "to" vertex of the edge
-      attr_reader :inVLabel
+      attr_reader :in_v_label
       # @return [String] id of the "from" vertex of the edge
-      attr_reader :outV
+      attr_reader :out_v
       # @return [String] label of the "from" vertex of the edge
-      attr_reader :outVLabel
+      attr_reader :out_v_label
 
       # @private
-      def initialize(id, label, properties, inV, inVLabel, outV, outVLabel)
+      def initialize(id, label, properties, in_v, in_v_label, out_v, out_v_label)
         # Validate args; this isn't an edge unless all args are non-nil.
         assert_not_empty(id, 'Cannot create Edge: id must not be empty')
         assert_not_empty(label, 'Cannot create Edge: label must not be empty')
-        assert_not_empty(inV, 'Cannot create Edge: inV must not be empty')
-        assert_not_empty(inVLabel, 'Cannot create Edge: inVLabel must not be empty')
-        assert_not_empty(outV, 'Cannot create Edge: outV must not be empty')
-        assert_not_empty(outVLabel, 'Cannot create Edge: outVLabel must not be empty')
+        assert_not_empty(in_v, 'Cannot create Edge: in_v must not be empty')
+        assert_not_empty(in_v_label, 'Cannot create Edge: in_v_label must not be empty')
+        assert_not_empty(out_v, 'Cannot create Edge: out_v must not be empty')
+        assert_not_empty(out_v_label, 'Cannot create Edge: out_v_label must not be empty')
 
         @id = id
         @label = label
         @properties = properties
-        @inV = inV
-        @inVLabel = inVLabel
-        @outV = outV
-        @outVLabel = outVLabel
+        @in_v = in_v
+        @in_v_label = in_v_label
+        @out_v = out_v
+        @out_v_label = out_v_label
       end
 
       # @private
@@ -53,7 +53,7 @@ module Dse
       def eql?(other)
         # id's are unique among graph objects, so we only need to compare id's to test for equality.
         other.is_a?(Edge) && \
-        @id == other.id
+          @id == other.id
       end
       alias == eql?
 
@@ -69,10 +69,10 @@ module Dse
           "@id=#{@id.inspect}, " \
           "@label=#{label.inspect}, " \
           "@properties=#{@properties.inspect}, " \
-          "@inV=#{@inV.inspect}, " \
-          "@inVLabel=#{@inVLabel.inspect}, " \
-          "@outV=#{@outV.inspect}, " \
-          "@outVLabel=#{@outVLabel.inspect}>"
+          "@in_v=#{@in_v.inspect}, " \
+          "@in_v_label=#{@in_v_label.inspect}, " \
+          "@out_v=#{@out_v.inspect}, " \
+          "@out_v_label=#{@out_v_label.inspect}>"
       end
     end
   end

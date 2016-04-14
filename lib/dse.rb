@@ -34,7 +34,7 @@ module Dse
   # @return [Cassandra::Future<Dse::Cluster>] a future resolving to the
   #   cluster instance.
   def self.cluster_async(options = {})
-    options, hosts = Cassandra::validate_and_massage_options(options)
+    options, hosts = Cassandra.validate_and_massage_options(options)
   rescue => e
     futures = options.fetch(:futures_factory) { return Future::Error.new(e) }
     futures.error(e)

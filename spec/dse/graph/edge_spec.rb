@@ -9,23 +9,23 @@ require 'spec_helper'
 module Dse
   module Graph
     describe Edge do
-      let(:cons_args) {
+      let(:cons_args) do
         [{ id_attr: 1 }, 'label', { 'name' => 'myname' },
-         { 'inV_id' => 1 }, 'inVLabel',
-         { 'outV_id' => 2 }, 'outVLabel']
-      }
+         { 'in_v_id' => 1 }, 'in_v_label',
+         { 'out_v_id' => 2 }, 'out_v_label']
+      end
 
       context :constructor do
         it 'should not yell if all args are specified' do
           Edge.new(*cons_args)
         end
 
-        it "should not yell if properties is blank" do
+        it 'should not yell if properties is blank' do
           cons_args[2] = {}
           Edge.new(*cons_args)
         end
 
-        ['id', 'label', nil, 'inV', 'inVLabel', 'outV', 'outVLabel'].each_with_index do |arg_name, ind|
+        ['id', 'label', nil, 'in_v', 'in_v_label', 'out_v', 'out_v_label'].each_with_index do |arg_name, ind|
           next if arg_name.nil?
           it "should yell if #{arg_name} is blank" do
             cons_args[ind] = cons_args[ind].is_a?(Hash) ? {} : ''

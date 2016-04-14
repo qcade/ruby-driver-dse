@@ -30,19 +30,19 @@ module Dse
     class Options
       # @private
       DEFAULT_GRAPH_OPTIONS = {
-          graph_source: 'default',
-          graph_language: 'gremlin-groovy'
+        graph_source: 'default',
+        graph_language: 'gremlin-groovy'
       }.freeze
 
       # @private
       OPTION_NAMES = [
-          :graph_name,
-          :graph_source,
-          :graph_alias,
-          :graph_language,
-          :graph_read_consistency,
-          :graph_write_consistency
-      ]
+        :graph_name,
+        :graph_source,
+        :graph_alias,
+        :graph_language,
+        :graph_read_consistency,
+        :graph_write_consistency
+      ].freeze
 
       # Create an Options object.
       # @param options [Hash] optional hash containing graph options. Keys are attribute name symbols
@@ -59,7 +59,7 @@ module Dse
           @real_options[attr]
         end
 
-        define_method("#{attr.to_s}=") do |value|
+        define_method("#{attr}=") do |value|
           @real_options[attr] = value
         end
       end
@@ -94,12 +94,12 @@ module Dse
       # @private
       def eql?(other)
         other.is_a?(Options) && \
-        @real_options[:graph_name] == other.graph_name && \
-        @real_options[:graph_source] == other.graph_source && \
-        @real_options[:graph_alias] == other.graph_alias && \
-        @real_options[:graph_language] == other.graph_language && \
-        @real_options[:graph_read_consistency] == other.graph_read_consistency && \
-        @real_options[:graph_write_consistency] == other.graph_write_consistency
+          @real_options[:graph_name] == other.graph_name && \
+          @real_options[:graph_source] == other.graph_source && \
+          @real_options[:graph_alias] == other.graph_alias && \
+          @real_options[:graph_language] == other.graph_language && \
+          @real_options[:graph_read_consistency] == other.graph_read_consistency && \
+          @real_options[:graph_write_consistency] == other.graph_write_consistency
       end
       alias == eql?
 

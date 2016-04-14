@@ -25,8 +25,8 @@ module Dse
       # @private
       def eql?(other)
         other.is_a?(Path) && \
-        @labels == other.labels && \
-        @objects == other.objects
+          @labels == other.labels && \
+          @objects == other.objects
       end
       alias == eql?
 
