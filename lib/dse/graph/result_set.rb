@@ -26,8 +26,6 @@ module Dse
       # @!method size
       #   @return [Integer] number of results
       #
-      # @!alias length
-      #
       # @!method last_page?
       #   @return [Boolean] whether more pages are available
       def_delegators :@results, :execution_info, :empty?, :size, :last_page?

@@ -6,34 +6,25 @@ module Dse
   #
   # @see http://datastax.github.io/ruby-driver/api/cassandra/session Cassandra::Session
   class Session
-    # @private
-    DEFAULT_GRAPH_OPTIONS = {
-        graph_source: 'default',
-        graph_language: 'gremlin-groovy'
-    }
+    # @return [Dse::Graph::Options] default graph options used by queries on this session.
+    attr_reader :default_graph_options
 
     # @private
     def initialize(cassandra_session)
       @cassandra_session = cassandra_session
+      @default_graph_options = Dse::Graph::Options.new
     end
 
     # Execute a graph query asynchronously.
     # @param statement [String] a graph query
-    # @param options [Hash] (nil) a customizable set of options. All of the options supported by
+    # @param options [Hash] a customizable set of options. All of the options supported by
     #   {Cassandra::Session#execute_async} are valid here. However, there are some extras.
     # @option options [Hash] :arguments Parameters for the graph query.
     #    NOTE: Unlike {#execute} and {#execute_async}, this must be a hash of &lt;parameter-name,value>.
-    # @option options [Hash] :graph_options Options for the DSE graph query handler.
-    #  * **:graph_name** - name of the targeted graph; required unless the query is a system query.
-    #  * **:graph_source** - graph traversal source (default "default")
-    #  * **:graph_alias** - alias to use for the graph traversal object (default "g")
-    #  * **:graph_language** - language used in the query (default "gremlin-groovy")
-    #  * **:graph_read_consistency** - Read consistency level for graph query. Overrides the standard statement
-    #     consistency level. Must be one of {Cassandra::CONSISTENCIES}
-    #  * **:graph_write_consistency** - Write consistency level for graph query. Overrides the standard statement
-    #     consistency level. Must be one of {Cassandra::CONSISTENCIES}
+    # @option options [Dse::Graph::Options, Hash] :graph_options options for the DSE graph query handler.
     # @return [Cassandra::Future<Cassandra::Result>]
-    # @see http://datastax.github.io/ruby-driver/api/cassandra/session/#execute_async-instance_method Cassandra::Session::execute_async for all of the core options.
+    # @see http://datastax.github.io/ruby-driver/api/cassandra/session/#execute_async-instance_method Cassandra::Session::execute_async
+    #   for all of the core options.
     def execute_graph_async(statement, options = {})
       # Make our own copy of the options. The caller might want to re-use the options they provided, and we're
       # about to do some destructive mutations/massages.
@@ -46,8 +37,12 @@ module Dse
         options[:arguments] = [parameters.to_json]
       end
 
-      graph_options = DEFAULT_GRAPH_OPTIONS.merge(options.delete(:graph_options) { {} })
-      options[:payload] = transform_graph_options(graph_options)
+      graph_options = options.delete(:graph_options)
+      unless graph_options.nil?
+        Cassandra::Util.assert_instance_of_one_of([Dse::Graph::Options, ::Hash], graph_options)
+        graph_options = Dse::Graph::Options.new(graph_options) if graph_options.is_a?(::Hash)
+      end
+      options[:payload] = @default_graph_options.merge(graph_options).as_payload
 
       @cassandra_session.execute_async(statement, options).then do |raw_result|
         Dse::Graph::ResultSet.new(raw_result)
@@ -76,18 +71,6 @@ module Dse
     # @private
     def respond_to?(method, include_private = false)
       super || @cassandra_session.respond_to?(method, include_private)
-    end
-
-    private
-    # @private
-    def transform_graph_options(graph_options)
-      # Transform the user-provided graph options (which use symbols with _'s) into a hash with string keys,
-      # where the keys are hyphenated (the way the server expects them).
-      result = {}
-      graph_options.each do |key, value|
-        result[key.to_s.tr!('_', '-')] = value
-      end
-      result
     end
   end
 end

@@ -14,7 +14,13 @@ require 'dse'
 
 cluster = Dse.cluster
 session = cluster.connect
-results = session.execute_graph('g.V()', graph_options: {graph_name: 'mygraph'})
+
+# We're going to manipulate a graph called 'mygraph' for the most part, so set it
+# as the default graph to use in the session.
+session.default_graph_options.graph_name = 'mygraph'
+
+# Run a query to get all the vertices in our graph.
+results = session.execute_graph('g.V()')
 
 # Each result is a Dse::Graph::Vertex.
 # Print out the label and a few of its properties.
@@ -49,7 +55,7 @@ results.each do |v|
 end
 
 # Let's do edges now. Each result is a Dse::Graph::Edge
-results = session.execute_graph('g.E()', graph_options: {graph_name: 'mygraph'})
+results = session.execute_graph('g.E()')
 
 puts "Number of edge results: #{results.size}"
 results.each do |e|
@@ -70,7 +76,7 @@ results.each do |e|
 end
 
 # Other complex results end up in a Dse::Graph::Result object
-results = session.execute_graph('g.V().in().path()', graph_options: {graph_name: 'mygraph'})
+results = session.execute_graph('g.V().in().path()')
 puts "Number of path results: #{results.size}"
 results.each do |r|
   # The 'value' of the result is a hash representation of the JSON result.
@@ -85,8 +91,17 @@ results.each do |r|
 end
 
 # Handling simple results is...simple! Dse::Graph::Result's 'value' attribute is the simple value. 
-results = session.execute_graph('g.V().count()', graph_options: {graph_name: 'mygraph'})
+results = session.execute_graph('g.V().count()')
 puts "Number of vertices: #{results.first.value}"
+
+# Run a query against a different graph, but don't mess with the session default.
+results = session.execute_graph('g.V().count()', graph_options: {graph_name: 'mygraph'})
+
+# Create a Graph Options object that we can save off and use. The graph_options arg to execute_graph
+# supports an Options object as well as Hash.
+options = Dse::Graph::Options.new
+options.graph_name = 'mygraph'
+results = session.execute_graph('g.V().count()', graph_options: options)
 ```
 
 ## Geospatial Types
