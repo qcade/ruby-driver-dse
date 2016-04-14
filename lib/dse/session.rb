@@ -1,8 +1,8 @@
 module Dse
   # A session is used to execute queries. In addition to executing standard CQL queries
   # via the {http://datastax.github.io/ruby-driver/api/cassandra/session/#execute-instance_method #execute} and
-  # {http://datastax.github.io/ruby-driver/api/cassandra/session/#execute_async-instance_method #execute_async} methods, it
-  # executes graph queries via the {#execute_graph_async} and {#execute_graph} methods.
+  # {http://datastax.github.io/ruby-driver/api/cassandra/session/#execute_async-instance_method #execute_async}
+  # methods, it executes graph queries via the {#execute_graph_async} and {#execute_graph} methods.
   #
   # @see http://datastax.github.io/ruby-driver/api/cassandra/session Cassandra::Session
   class Session
@@ -23,8 +23,8 @@ module Dse
     #    NOTE: Unlike {#execute} and {#execute_async}, this must be a hash of &lt;parameter-name,value>.
     # @option options [Dse::Graph::Options, Hash] :graph_options options for the DSE graph query handler.
     # @return [Cassandra::Future<Cassandra::Result>]
-    # @see http://datastax.github.io/ruby-driver/api/cassandra/session/#execute_async-instance_method Cassandra::Session::execute_async
-    #   for all of the core options.
+    # @see http://datastax.github.io/ruby-driver/api/cassandra/session/#execute_async-instance_method
+    #   Cassandra::Session::execute_async for all of the core options.
     def execute_graph_async(statement, options = {})
       # Make our own copy of the options. The caller might want to re-use the options they provided, and we're
       # about to do some destructive mutations/massages.

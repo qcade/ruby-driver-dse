@@ -7,16 +7,16 @@ require 'cucumber/rake/task'
 require 'rake/testtask'
 require 'bundler/gem_tasks'
 
-ENV["FAIL_FAST"] ||= 'Y'
+ENV['FAIL_FAST'] ||= 'Y'
 
 RSpec::Core::RakeTask.new(:rspec)
 
 Cucumber::Rake::Task.new(:cucumber)
 
 desc 'Run all tests'
-task :test => [:rspec, :integration, :cucumber]
+task test: [:rspec, :integration, :cucumber]
 
-ruby_engine = defined?(RUBY_ENGINE)? RUBY_ENGINE : 'ruby'
+ruby_engine = defined?(RUBY_ENGINE) ? RUBY_ENGINE : 'ruby'
 
 case ruby_engine
 when 'jruby'
@@ -30,9 +30,8 @@ else
 end
 
 Rake::TestTask.new(:integration) do |t|
-  t.libs.push "lib"
+  t.libs.push 'lib'
   t.test_files = FileList['integration/*_test.rb',
                           'integration/security/*_test.rb']
   t.verbose = true
 end
-

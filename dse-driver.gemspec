@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-$: << File.expand_path('../lib', __FILE__)
+$LOAD_PATH << File.expand_path('../lib', __FILE__)
 
 require 'dse/version'
 
@@ -9,10 +9,10 @@ Gem::Specification.new do |s|
   s.version       = Dse::VERSION.dup
   s.authors       = ['Sandeep Tamhankar']
   s.email         = ['sandeep.tamhankar@datastax.com']
-#  s.homepage      = 'http://datastax.github.io/ruby-driver'
-  s.summary       = %q{Ruby Driver for DataStax Enterprise}
-  s.description   = %q{A pure Ruby driver for DataStax Enterprise}
-#  s.license       = 'Apache License 2.0'
+  #  s.homepage      = 'http://datastax.github.io/ruby-driver'
+  s.summary       = 'Ruby Driver for DataStax Enterprise'
+  s.description   = 'A pure Ruby driver for DataStax Enterprise'
+  #  s.license       = 'Apache License 2.0'
   s.files         = Dir['lib/**/*.rb', 'README.md', '.yardopts']
   s.require_paths = %w(lib)
 

@@ -7,19 +7,20 @@
 require 'spec_helper'
 
 def vertex_property_blob(name, value, options = {})
-  options = { community_id: 12345, member_id: 0, group_id: 5, vertex_label: 'vertex_label', properties: {} }.merge(options)
+  options = { community_id: 12345, member_id: 0, group_id: 5, vertex_label: 'vertex_label', properties: {} }
+            .merge(options)
   result = {
-      "id" => {
-          "local_id" => "00000000-0000-8002-0000-000000000000",
-          "~type" => name,
-          "out_vertex" => {
-              "member_id" => options[:member_id],
-              "community_id" => options[:community_id],
-              "~label" => options[:vertex_label],
-              "group_id" => options[:group_id]
-          }
-      },
-      "value" => value
+    'id' => {
+      'local_id' => '00000000-0000-8002-0000-000000000000',
+      '~type' => name,
+      'out_vertex' => {
+        'member_id' => options[:member_id],
+        'community_id' => options[:community_id],
+        '~label' => options[:vertex_label],
+        'group_id' => options[:group_id]
+      }
+    },
+    'value' => value
   }
 
   # Add in meta-properties that were specified.

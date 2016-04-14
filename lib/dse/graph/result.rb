@@ -26,26 +26,26 @@ module Dse
       def cast
         type = @value['type'] if @value.is_a?(Hash)
         case type
-          when 'vertex'
-            as_vertex
-          when 'edge'
-            as_edge
-          else
-            self
+        when 'vertex'
+          as_vertex
+        when 'edge'
+          as_edge
+        else
+          self
         end
       end
 
       # Coerce this result into a {Vertex} object.
       # @return [Vertex] a vertex domain object
       # @raise [ArgumentError] if the result data does not represent a vertex
-      def as_vertex()
+      def as_vertex
         Dse::Graph::Vertex.new(@value['id'], @value['label'], @value.fetch('properties', {}))
       end
 
       # Coerce this result into an {Edge} object.
       # @return [Edge] an edge domain object.
       # @raise [ArgumentError] if the result data does not represent an edge.
-      def as_edge()
+      def as_edge
         Dse::Graph::Edge.new(@value['id'], @value['label'], @value.fetch('properties', {}),
                              @value['inV'], @value['inVLabel'],
                              @value['outV'], @value['outVLabel'])
@@ -53,14 +53,14 @@ module Dse
 
       # Coerce this result into a {Path} object.
       # @return [Path] a path domain object.
-      def as_path()
+      def as_path
         Dse::Graph::Path.new(@value['labels'], @value['objects'])
       end
 
       # @private
       def eql?(other)
         other.is_a?(Result) && \
-        @value == other.value
+          @value == other.value
       end
       alias == eql?
 

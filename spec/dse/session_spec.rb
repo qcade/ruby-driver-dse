@@ -13,18 +13,18 @@ module Dse
     let(:session) { Session.new(cassandra_session) }
     context :execute_graph_async do
       it 'should succeed without query parameters' do
-        expect(cassandra_session).to receive(:execute_async).with('g.V()', {
-            payload: { 'graph-source' => 'default', 'graph-language' => 'gremlin-groovy' }
-        }).and_return(future)
+        expect(cassandra_session).to receive(:execute_async)
+          .with('g.V()',
+                payload: { 'graph-source' => 'default', 'graph-language' => 'gremlin-groovy' }).and_return(future)
         expect(future).to receive(:then)
         session.execute_graph_async('g.V()')
       end
 
       it 'should succeed with query parameters' do
-        expect(cassandra_session).to receive(:execute_async).with('g.V().limit(n)', {
-            arguments: ['{"n":2}'],
-            payload: { 'graph-source' => 'default', 'graph-language' => 'gremlin-groovy' } }).
-            and_return(future)
+        expect(cassandra_session).to receive(:execute_async)
+          .with('g.V().limit(n)', arguments: ['{"n":2}'],
+                                  payload: { 'graph-source' => 'default', 'graph-language' => 'gremlin-groovy' })
+          .and_return(future)
         expect(future).to receive(:then)
         session.execute_graph_async('g.V().limit(n)', arguments: { n: 2 })
       end
@@ -34,20 +34,23 @@ module Dse
       end
 
       it 'should accept graph options hash' do
-        expect(cassandra_session).to receive(:execute_async).with('g.V()', {
-            payload: { 'graph-source' => 'other', 'graph-language' => 'gremlin-groovy', 'graph-name' => 'myg' } }).
-            and_return(future)
+        expect(cassandra_session).to receive(:execute_async)
+          .with('g.V()',
+                payload: { 'graph-source' => 'other', 'graph-language' => 'gremlin-groovy', 'graph-name' => 'myg' })
+          .and_return(future)
         expect(future).to receive(:then)
         options = Dse::Graph::Options.new
         options.graph_source = 'other'
         options.graph_name = 'myg'
-        session.execute_graph_async('g.V()', graph_options: { graph_source: 'other', graph_name: 'myg', random: 'junk' })
+        session.execute_graph_async('g.V()',
+                                    graph_options: { graph_source: 'other', graph_name: 'myg', random: 'junk' })
       end
 
       it 'should accept graph options object' do
-        expect(cassandra_session).to receive(:execute_async).with('g.V()', {
-            payload: { 'graph-source' => 'other', 'graph-language' => 'gremlin-groovy', 'graph-name' => 'myg' } }).
-            and_return(future)
+        expect(cassandra_session).to receive(:execute_async)
+          .with('g.V()',
+                payload: { 'graph-source' => 'other', 'graph-language' => 'gremlin-groovy', 'graph-name' => 'myg' })
+          .and_return(future)
         expect(future).to receive(:then)
         options = Dse::Graph::Options.new
         options.graph_source = 'other'
