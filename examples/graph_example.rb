@@ -13,28 +13,30 @@ def emit_result(result)
   end
 end
 
-# Connect to the cluster and get a session.
+# Connect to the cluster and get a session whose graph queries will be tied to the graph
+# named STUDIO_TUTORIAL_GRAPH by default. See the documentation for Dse::Graph::Options for all
+# supported graph options.
 cluster = Dse.cluster
-session = cluster.connect
+session = cluster.connect(graph_name: 'STUDIO_TUTORIAL_GRAPH')
 
-# Default to querying the STUDIO_TUTORIAL_GRAPH graph.
-session.default_graph_options.graph_name = 'STUDIO_TUTORIAL_GRAPH'
-
-# Run a simple query to get all of the vertices in our graph (mygraph). Then print out the result.
+puts '-- Run a simple query to get all vertices in our graph. --'
 emit_result(session.execute_graph('g.V()'))
 
-# Use a parameterized query to limit the result size. Be careful not to use reserved words for parameter
-# names (e.g. max)
+puts '-- Run a parameterized query to limit result size to 3. --'
 emit_result(session.execute_graph('g.V().limit(my_limit)',
                                   arguments: {my_limit: 3}))
 
-# Run a query whose result is a simple value.
+puts '-- Run a query whose result is a simple value. --'
 emit_result(session.execute_graph('g.V().count()'))
 
-# Run a query against a different graph.
+puts '-- Run a query with a different graph alias. --'
 emit_result(session.execute_graph('m.E().limit(1)', graph_options: {graph_alias: 'm'}))
 
-# Or use a Graph Options object.
+puts '-- Or use a Graph Options object. --'
 options = Dse::Graph::Options.new
 options.graph_alias = 'm'
 emit_result(session.execute_graph('m.E().limit(1)', graph_options: options))
+
+puts '-- Change the graph alias on the session so that all future queries use it. --'
+session.graph_options.graph_alias = 'q'
+emit_result(session.execute_graph('q.E().limit(1)'))

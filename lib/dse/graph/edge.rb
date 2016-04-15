@@ -67,7 +67,7 @@ module Dse
       def inspect
         "#<Dse::Graph::Edge:0x#{object_id.to_s(16)} " \
           "@id=#{@id.inspect}, " \
-          "@label=#{label.inspect}, " \
+          "@label=#{@label.inspect}, " \
           "@properties=#{@properties.inspect}, " \
           "@in_v=#{@in_v.inspect}, " \
           "@in_v_label=#{@in_v_label.inspect}, " \

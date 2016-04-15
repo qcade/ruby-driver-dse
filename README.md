@@ -12,12 +12,11 @@ Here's a run-down of the graph api:
 ```ruby
 require 'dse'
 
+# Connect to DSE and create a session whose graph queries will be tied to the graph
+# named 'mygraph' by default. See the documentation for Dse::Graph::Options for all
+# supported graph options.
 cluster = Dse.cluster
-session = cluster.connect
-
-# We're going to manipulate a graph called 'mygraph' for the most part, so set it
-# as the default graph to use in the session.
-session.default_graph_options.graph_name = 'mygraph'
+session = cluster.connect(graph_name: 'mygraph')
 
 # Run a query to get all the vertices in our graph.
 results = session.execute_graph('g.V()')
@@ -95,13 +94,17 @@ results = session.execute_graph('g.V().count()')
 puts "Number of vertices: #{results.first.value}"
 
 # Run a query against a different graph, but don't mess with the session default.
-results = session.execute_graph('g.V().count()', graph_options: {graph_name: 'mygraph'})
+results = session.execute_graph('g.V().count()', graph_options: {graph_name: 'my_other__graph'})
 
 # Create a Graph Options object that we can save off and use. The graph_options arg to execute_graph
 # supports an Options object as well as Hash.
 options = Dse::Graph::Options.new
 options.graph_name = 'mygraph'
 results = session.execute_graph('g.V().count()', graph_options: options)
+
+# Change the graph options on the session to alter subsequent query behavior.
+session.graph_options.graph_alias = 'm'
+results = session.execute_graph('m.V().count()')
 ```
 
 ## Geospatial Types

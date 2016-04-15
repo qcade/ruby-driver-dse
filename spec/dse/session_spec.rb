@@ -10,7 +10,7 @@ module Dse
   describe Session do
     let(:future) { double('future') }
     let(:cassandra_session) { double('cassandra_session') }
-    let(:session) { Session.new(cassandra_session) }
+    let(:session) { Session.new(cassandra_session, Dse::Graph::Options.new) }
     context :execute_graph_async do
       it 'should succeed without query parameters' do
         expect(cassandra_session).to receive(:execute_async)
