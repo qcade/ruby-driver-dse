@@ -46,6 +46,12 @@ module Dse
         @parsed_results.each(&block)
       end
 
+      # allow array indexing into the result
+      # @param ind [Integer] index into the collection of query results.
+      def [](ind)
+        @parsed_results[ind]
+      end
+
       # Loads next page asynchronously
       #
       # @param options [Hash] additional options, just like the ones for

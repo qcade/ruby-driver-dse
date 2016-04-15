@@ -89,6 +89,9 @@ results.each do |r|
   puts "first label: #{p.labels.first}"
 end
 
+# We can also access particular items in the result-set via array dereference
+p results[1]
+
 # Handling simple results is...simple! Dse::Graph::Result's 'value' attribute is the simple value. 
 results = session.execute_graph('g.V().count()')
 puts "Number of vertices: #{results.first.value}"
