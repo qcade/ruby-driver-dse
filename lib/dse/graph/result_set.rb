@@ -14,6 +14,7 @@ module Dse
     # @see Path
     # @see Result
     class ResultSet
+      include Enumerable
       extend Forwardable
 
       # @!method execution_info
@@ -66,6 +67,11 @@ module Dse
       # @return [Dse::Graph::ResultSet, nil] returns `nil` if last page
       def next_page(options = nil)
         next_page_async(options).get
+      end
+
+      # @private
+      def inspect
+        "#<Dse::ResultSet:0x#{object_id.to_s(16)}>"
       end
     end
   end
