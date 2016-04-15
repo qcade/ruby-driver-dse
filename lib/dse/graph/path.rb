@@ -44,7 +44,7 @@ module Dse
       # @private
       def inspect
         "#<Dse::Graph::Path:0x#{object_id.to_s(16)} " \
-          "@labels=#{labels.inspect}, " \
+          "@labels=#{@labels.inspect}, " \
           "@objects=#{@objects.inspect}>"
       end
     end

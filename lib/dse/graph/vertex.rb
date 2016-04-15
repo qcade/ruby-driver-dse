@@ -99,7 +99,7 @@ module Dse
       def inspect
         "#<Dse::Graph::Vertex:0x#{object_id.to_s(16)} " \
           "@id=#{@id.inspect}, " \
-          "@label=#{label.inspect}, " \
+          "@label=#{@label.inspect}, " \
           "@properties=#{@properties.inspect}, " \
           "@type=#{@type.inspect}>"
       end

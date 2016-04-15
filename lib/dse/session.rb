@@ -7,12 +7,12 @@ module Dse
   # @see http://datastax.github.io/ruby-driver/api/cassandra/session Cassandra::Session
   class Session
     # @return [Dse::Graph::Options] default graph options used by queries on this session.
-    attr_reader :default_graph_options
+    attr_reader :graph_options
 
     # @private
-    def initialize(cassandra_session)
+    def initialize(cassandra_session, graph_options)
       @cassandra_session = cassandra_session
-      @default_graph_options = Dse::Graph::Options.new
+      @graph_options = graph_options
     end
 
     # Execute a graph query asynchronously.
@@ -42,7 +42,7 @@ module Dse
         Cassandra::Util.assert_instance_of_one_of([Dse::Graph::Options, ::Hash], graph_options)
         graph_options = Dse::Graph::Options.new(graph_options) if graph_options.is_a?(::Hash)
       end
-      options[:payload] = @default_graph_options.merge(graph_options).as_payload
+      options[:payload] = @graph_options.merge(graph_options).as_payload
 
       @cassandra_session.execute_async(statement, options).then do |raw_result|
         Dse::Graph::ResultSet.new(raw_result)

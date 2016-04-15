@@ -13,12 +13,22 @@ module Dse
     # Cassandra::Cluster#connect_async}
     # to connect asynchronously to a cluster, but returns a future that will resolve to a DSE session rather than
     # Cassandra session.
+    # @param options [Hash] (nil) connection options
+    # @option options [String] :keyspace name of keyspace to scope session to for cql queries.
+    # @option options [String] :graph_name name of graph to use in graph queries
+    # @option options [String] :graph_source graph traversal source
+    # @option options [String] :graph_alias alias to use for the graph traversal object in graph queries
+    # @option options [String] :graph_language language used in graph queries
+    # @option options [Cassandra::CONSISTENCIES] :graph_read_consistency read consistency level for graph queries.
+    #    Overrides the standard statement consistency level
+    # @option options [Cassandra::CONSISTENCIES] :graph_write_consistency write consistency level for graph queries.
+    #    Overrides the standard statement consistency level
     # @return [Cassandra::Future<Dse::Session>]
-    def connect_async(*args)
-      future = @delegate_cluster.connect_async(*args)
+    def connect_async(options = {})
+      future = @delegate_cluster.connect_async(options[:keyspace])
       # We want to actually return a DSE session upon successful connection.
       future.then do |cassandra_session|
-        Dse::Session.new(cassandra_session)
+        Dse::Session.new(cassandra_session, Dse::Graph::Options.new(options))
       end
     end
 
