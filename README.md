@@ -97,7 +97,7 @@ results = session.execute_graph('g.V().count()')
 puts "Number of vertices: #{results.first.value}"
 
 # Run a query against a different graph, but don't mess with the session default.
-results = session.execute_graph('g.V().count()', graph_options: {graph_name: 'my_other__graph'})
+results = session.execute_graph('g.V().count()', graph_name: 'my_other__graph')
 
 # Create a Graph Options object that we can save off and use. The graph_options arg to execute_graph
 # supports an Options object as well as Hash.
