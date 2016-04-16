@@ -18,10 +18,19 @@ module Dse
     # Execute a graph query asynchronously.
     # @param statement [String] a graph query
     # @param options [Hash] a customizable set of options. All of the options supported by
-    #   {Cassandra::Session#execute_async} are valid here. However, there are some extras.
+    #   {Cassandra::Session#execute_async} are valid here. However, there are some extras, noted below.
     # @option options [Hash] :arguments Parameters for the graph query.
     #    NOTE: Unlike {#execute} and {#execute_async}, this must be a hash of &lt;parameter-name,value>.
-    # @option options [Dse::Graph::Options, Hash] :graph_options options for the DSE graph query handler.
+    # @option options [Dse::Graph::Options] :graph_options options for the DSE graph query handler. Takes
+    #    priority over other `:graph_*` options specified below.
+    # @option options [String] :graph_name name of graph to use in graph queries
+    # @option options [String] :graph_source graph traversal source
+    # @option options [String] :graph_alias alias to use for the graph traversal object in graph queries
+    # @option options [String] :graph_language language used in graph queries
+    # @option options [Cassandra::CONSISTENCIES] :graph_read_consistency read consistency level for graph queries.
+    #    Overrides the standard statement consistency level
+    # @option options [Cassandra::CONSISTENCIES] :graph_write_consistency write consistency level for graph queries.
+    #    Overrides the standard statement consistency level
     # @return [Cassandra::Future<Cassandra::Result>]
     # @see http://datastax.github.io/ruby-driver/api/cassandra/session/#execute_async-instance_method
     #   Cassandra::Session::execute_async for all of the core options.
@@ -38,10 +47,12 @@ module Dse
       end
 
       graph_options = options.delete(:graph_options)
-      unless graph_options.nil?
-        Cassandra::Util.assert_instance_of_one_of([Dse::Graph::Options, ::Hash], graph_options)
-        graph_options = Dse::Graph::Options.new(graph_options) if graph_options.is_a?(::Hash)
+      if graph_options.nil?
+        # Since an Options object wasn't given to us, construct it from the options hash.
+        graph_options = Dse::Graph::Options.new(options)
       end
+      Cassandra::Util.assert_instance_of(Dse::Graph::Options, graph_options)
+
       options[:payload] = @graph_options.merge(graph_options).as_payload
 
       @cassandra_session.execute_async(statement, options).then do |raw_result|

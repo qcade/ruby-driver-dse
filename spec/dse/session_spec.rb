@@ -36,14 +36,14 @@ module Dse
       it 'should accept graph options hash' do
         expect(cassandra_session).to receive(:execute_async)
           .with('g.V()',
+                graph_source: 'other', graph_name: 'myg', random: 'junk',
                 payload: { 'graph-source' => 'other', 'graph-language' => 'gremlin-groovy', 'graph-name' => 'myg' })
           .and_return(future)
         expect(future).to receive(:then)
         options = Dse::Graph::Options.new
         options.graph_source = 'other'
         options.graph_name = 'myg'
-        session.execute_graph_async('g.V()',
-                                    graph_options: { graph_source: 'other', graph_name: 'myg', random: 'junk' })
+        session.execute_graph_async('g.V()', graph_source: 'other', graph_name: 'myg', random: 'junk')
       end
 
       it 'should accept graph options object' do

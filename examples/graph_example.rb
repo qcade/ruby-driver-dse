@@ -30,7 +30,7 @@ puts '-- Run a query whose result is a simple value. --'
 emit_result(session.execute_graph('g.V().count()'))
 
 puts '-- Run a query with a different graph alias. --'
-emit_result(session.execute_graph('m.E().limit(1)', graph_options: {graph_alias: 'm'}))
+emit_result(session.execute_graph('m.E().limit(1)', graph_alias: 'm'))
 
 puts '-- Or use a Graph Options object. --'
 options = Dse::Graph::Options.new
