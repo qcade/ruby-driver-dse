@@ -9,6 +9,9 @@ module Dse
     # Collection of results of running a graph query. It wraps a {Cassandra::Result}. When iterating
     # over results, individual results may be well-known domain objects or a generic {Result}.
     #
+    # A ResultSet is actually a page of results. Use the {#next_page} or {#next_page_async} method to retrieve a
+    # new result-set for the next page (if any).
+    #
     # @see Vertex
     # @see Edge
     # @see Path
@@ -46,7 +49,8 @@ module Dse
         @parsed_results.each(&block)
       end
 
-      # allow array indexing into the result
+      # Allow array indexing into the result-set.
+      # @note As a ResultSet represents a page of results, this indexing is into the current page.
       # @param ind [Integer] index into the collection of query results.
       def [](ind)
         @parsed_results[ind]
@@ -59,7 +63,8 @@ module Dse
       #
       # @note `:paging_state` option will be ignored.
       #
-      # @return [Cassandra::Future<Dse::Graph::ResultSet, nil>] returns `nil` if last page
+      # @return [Cassandra::Future<Dse::Graph::ResultSet>] a future that resolves to a new ResultSet if there is a new
+      #   page, `nil` otherwise.
       #
       # @see Dse::Session#execute_graph_async
       def next_page_async(options = nil)
