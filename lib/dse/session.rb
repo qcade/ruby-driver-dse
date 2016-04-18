@@ -10,9 +10,10 @@ module Dse
     attr_reader :graph_options
 
     # @private
-    def initialize(cassandra_session, graph_options)
+    def initialize(cassandra_session, graph_options, futures_factory)
       @cassandra_session = cassandra_session
       @graph_options = graph_options
+      @futures = futures_factory
     end
 
     # Execute a graph statement asynchronously.
@@ -50,6 +51,8 @@ module Dse
       @cassandra_session.execute_async(graph_statement.simple_statement, options).then do |raw_result|
         Dse::Graph::ResultSet.new(raw_result)
       end
+    rescue => e
+      @futures.error(e)
     end
 
     # Execute a graph statement synchronously.
