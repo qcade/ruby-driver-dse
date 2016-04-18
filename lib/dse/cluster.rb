@@ -15,13 +15,13 @@ module Dse
     # Cassandra session.
     # @param options [Hash] (nil) connection options
     # @option options [String] :keyspace name of keyspace to scope session to for cql queries.
-    # @option options [String] :graph_name name of graph to use in graph queries
+    # @option options [String] :graph_name name of graph to use in graph statements
     # @option options [String] :graph_source graph traversal source
-    # @option options [String] :graph_alias alias to use for the graph traversal object in graph queries
+    # @option options [String] :graph_alias alias to use for the graph traversal object in graph statements
     # @option options [String] :graph_language language used in graph queries
-    # @option options [Cassandra::CONSISTENCIES] :graph_read_consistency read consistency level for graph queries.
+    # @option options [Cassandra::CONSISTENCIES] :graph_read_consistency read consistency level for graph statements.
     #    Overrides the standard statement consistency level
-    # @option options [Cassandra::CONSISTENCIES] :graph_write_consistency write consistency level for graph queries.
+    # @option options [Cassandra::CONSISTENCIES] :graph_write_consistency write consistency level for graph statements.
     #    Overrides the standard statement consistency level
     # @return [Cassandra::Future<Dse::Session>]
     def connect_async(options = {})

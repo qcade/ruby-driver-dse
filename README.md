@@ -7,7 +7,12 @@ This driver exposes the following features of DSE 5.0:
 * Kerberos authentication with nodes
 
 ## Graph
-Here's a run-down of the graph api:
+Executing graph statements is similar to issuing CQL queries in the Cassandra
+driver. The difference is that while the Cassandra driver returns rows of results from
+tables, the DSE driver returns graph result sets, which may contain domain object
+representations of graph objects.
+
+Any script using the DSE driver to execute graph queries will begin like this: 
 
 ```ruby
 require 'dse'
@@ -17,7 +22,21 @@ require 'dse'
 # supported graph options.
 cluster = Dse.cluster
 session = cluster.connect(graph_name: 'mygraph')
+```
 
+The DSE driver is a wrapper around the core Cassandra driver, so any valid options to
+the core driver are valid in the DSE driver as well.
+ 
+To execute system query statements (to create a graph for example), *do not* specify a
+graph name to bind to when connecting. This is illegal in DSE graph. 
+
+### Vertices ###
+Vertices in DSE Graph have properties. A property may have multiple values. This is
+represented as an array when manipulating a Vertex object. A property value may also
+have properties of their own (known as meta-properties). These meta-properties are
+simple key-value pairs of strings; they do not nest.
+
+```ruby
 # Run a query to get all the vertices in our graph.
 results = session.execute_graph('g.V()')
 
@@ -52,18 +71,24 @@ results.each do |v|
    # This has a short-cut syntax as well:
    puts "  title: #{v['name'][0]['title']}"
 end
+```
 
-# Let's do edges now. Each result is a Dse::Graph::Edge
+### Edges ###
+Edges connect a pair of vertices in DSE Graph. They also have properties,
+but they are simple key-value pairs of strings.
+
+```ruby
 results = session.execute_graph('g.E()')
 
 puts "Number of edge results: #{results.size}"
+# Each result is a Dse::Graph::Edge object.
 results.each do |e|
    # Start with the label
    puts "#{e.label}:"
    
    # Now the id's of the two vertices that this edge connects.
    puts "  in id: #{e.inV}"
-   puts "  out id: #{e.outV"
+   puts "  out id: #{e.outV}"
    
    # Edge properties are simple key-value pairs; sort of like
    # meta-properties on vertices.
@@ -73,34 +98,47 @@ results.each do |e|
    # This supports the short-cut syntax as well:
    puts "  edge_prop1: #{e['edge_prop1']}"
 end
+```
 
-# Other complex results end up in a Dse::Graph::Result object
+### Path and Arbitrary Objects ###
+Paths describe a path between two vertices. The graph response from DSE does not
+indicate that the response is a path, so the driver cannot automatically
+coerce such results into Path objects. The driver returns a DSE::Graph::Result
+object in such cases, and you can coerce the result.
+
+```ruby
 results = session.execute_graph('g.V().in().path()')
 puts "Number of path results: #{results.size}"
 results.each do |r|
   # The 'value' of the result is a hash representation of the JSON result.
   puts "first label: #{r.value['labels'].first}"
   
-  # We do have a class that wraps path JSON, but unlike Vertex and Edge, where the JSON
-  # indicates the type explicitly, path results do not, so we can't automatically
-  # create them within the api. So, you do it yourself.
-  
+  # Since we know this is a Path result, coerce it and use the Path object's methods.
   p = r.as_path
   puts "first label: #{p.labels.first}"
 end
+```
 
-# We can also access particular items in the result-set via array dereference
-p results[1]
+When a query has a simple result, the :value attribute of the result object
+contains the simple value rather than a hash.
 
-# Handling simple results is...simple! Dse::Graph::Result's 'value' attribute is the simple value. 
+```ruby
 results = session.execute_graph('g.V().count()')
 puts "Number of vertices: #{results.first.value}"
+```
+
+### Miscellaneous Features ###
+There are a number of other features in the api to make development easier.
+
+```ruby
+# We can access particular items in the result-set via array dereference
+p results[1]
 
 # Run a query against a different graph, but don't mess with the session default.
 results = session.execute_graph('g.V().count()', graph_name: 'my_other__graph')
 
 # Create a Graph Options object that we can save off and use. The graph_options arg to execute_graph
-# supports an Options object as well as Hash.
+# supports an Options object.
 options = Dse::Graph::Options.new
 options.graph_name = 'mygraph'
 results = session.execute_graph('g.V().count()', graph_options: options)
@@ -108,6 +146,11 @@ results = session.execute_graph('g.V().count()', graph_options: options)
 # Change the graph options on the session to alter subsequent query behavior.
 session.graph_options.graph_alias = 'm'
 results = session.execute_graph('m.V().count()')
+
+# Create a statement object encapsulating a graph query, options, parameters,
+# for ease of reuse.
+statement = Dse::Graph::Statement.new('g.V().limit(n)', {n: 3}, graph_name: 'mygraph')
+results = session.execute_graph(statement)
 ```
 
 ## Geospatial Types

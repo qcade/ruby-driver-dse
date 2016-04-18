@@ -40,3 +40,7 @@ emit_result(session.execute_graph('m.E().limit(1)', graph_options: options))
 puts '-- Change the graph alias on the session so that all future queries use it. --'
 session.graph_options.graph_alias = 'q'
 emit_result(session.execute_graph('q.E().limit(1)'))
+
+puts '-- Use a Graph Statement object --'
+statement = Dse::Graph::Statement.new('m.E().limit(1)', nil, graph_options: options)
+emit_result(session.execute_graph(statement))
