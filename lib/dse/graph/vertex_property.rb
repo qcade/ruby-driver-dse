@@ -17,8 +17,6 @@ module Dse
     #   # is the same as
     #   val = vp['meta1']
     class VertexProperty
-      include Cassandra::Util
-
       # @return [Hash] id of this property
       attr_reader :id
       # @return [String] value of this property

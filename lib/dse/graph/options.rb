@@ -8,19 +8,19 @@ module Dse
   module Graph
     # @!parse
     #   class Options
-    #     # @return [String] name of the targeted graph; required unless the query is a system query.
+    #     # @return [String] name of the targeted graph; required unless the statement is a system query.
     #     attr_accessor :graph_name
     #     # @return [String] graph traversal source (default "default")
     #     attr_accessor :graph_source
     #     # @return [String] alias to use for the graph traversal object (default "g")
     #     attr_accessor :graph_alias
-    #     # @return [String] language used in the query (default "gremlin-groovy")
+    #     # @return [String] language used in the graph statement (default "gremlin-groovy")
     #     attr_accessor :graph_language
-    #     # @return [Cassandra::CONSISTENCIES] read consistency level for graph query.
+    #     # @return [Cassandra::CONSISTENCIES] read consistency level for graph statement.
     #     #   Overrides the standard statement consistency level. Defaults to ONE in the server,
     #     #   but the default may be configured differently.
     #     attr_accessor :graph_read_consistency
-    #     # @return [Cassandra::CONSISTENCIES] write consistency level for graph query.
+    #     # @return [Cassandra::CONSISTENCIES] write consistency level for graph statement.
     #     #   Overrides the standard statement consistency level. Defaults to QUORUM in the server,
     #     #   but the default may be configured differently.
     #     attr_accessor :graph_write_consistency
