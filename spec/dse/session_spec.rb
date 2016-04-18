@@ -5,13 +5,15 @@
 #++
 
 require 'spec_helper'
+require 'dse'
 
 module Dse
   include Cassandra::Statements
   describe Session do
+    let(:futures_factory) { double('futures-factory') }
     let(:future) { double('future') }
     let(:cassandra_session) { double('cassandra_session') }
-    let(:session) { Session.new(cassandra_session, Dse::Graph::Options.new) }
+    let(:session) { Session.new(cassandra_session, Dse::Graph::Options.new, futures_factory) }
     context :execute_graph_async do
       it 'should succeed without query parameters' do
         simple_statement = Simple.new('g.V()', nil, nil, false)
@@ -33,7 +35,8 @@ module Dse
       end
 
       it 'should error out if parameters are not a hash' do
-        expect { session.execute_graph_async('g.V().limit(n)', arguments: 7) }.to raise_error(ArgumentError)
+        expect(futures_factory).to receive(:error).with(instance_of(ArgumentError))
+        session.execute_graph_async('g.V().limit(n)', arguments: 7)
       end
 
       it 'should accept graph options hash' do
@@ -78,7 +81,8 @@ module Dse
       end
 
       it 'should error out if options is not a hash nor Options' do
-        expect { session.execute_graph_async('g.V()', graph_options: 7) }.to raise_error(ArgumentError)
+        expect(futures_factory).to receive(:error).with(instance_of(ArgumentError))
+        session.execute_graph_async('g.V()', graph_options: 7)
       end
     end
   end

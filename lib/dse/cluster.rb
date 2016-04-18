@@ -5,8 +5,39 @@ module Dse
   # functionality.
   class Cluster
     # @private
-    def initialize(*args)
-      @delegate_cluster = Cassandra::Cluster.new(*args)
+    def initialize(logger,
+                   io_reactor,
+                   executor,
+                   control_connection,
+                   cluster_registry,
+                   cluster_schema,
+                   cluster_metadata,
+                   execution_options,
+                   connection_options,
+                   load_balancing_policy,
+                   reconnection_policy,
+                   retry_policy,
+                   address_resolution_policy,
+                   connector,
+                   futures_factory)
+      @delegate_cluster = Cassandra::Cluster.new(logger,
+                                                 io_reactor,
+                                                 executor,
+                                                 control_connection,
+                                                 cluster_registry,
+                                                 cluster_schema,
+                                                 cluster_metadata,
+                                                 execution_options,
+                                                 connection_options,
+                                                 load_balancing_policy,
+                                                 reconnection_policy,
+                                                 retry_policy,
+                                                 address_resolution_policy,
+                                                 connector,
+                                                 futures_factory)
+      # We need the futures factory ourselves for async error reporting and potentially for our
+      # own async processing independent of the C* driver.
+      @futures = futures_factory
     end
 
     # Delegates to {http://datastax.github.io/ruby-driver/api/cassandra/cluster/#connect_async-instance_method
@@ -28,7 +59,7 @@ module Dse
       future = @delegate_cluster.connect_async(options[:keyspace])
       # We want to actually return a DSE session upon successful connection.
       future.then do |cassandra_session|
-        Dse::Session.new(cassandra_session, Dse::Graph::Options.new(options))
+        Dse::Session.new(cassandra_session, Dse::Graph::Options.new(options), @futures)
       end
     end
 
