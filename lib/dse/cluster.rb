@@ -46,6 +46,8 @@ module Dse
     # Cassandra session.
     # @param options [Hash] (nil) connection options
     # @option options [String] :keyspace name of keyspace to scope session to for cql queries.
+    # @option options [Dse::Graph::Options] :graph_options options for the DSE graph statement handler. Takes
+    #    priority over other `:graph_*` options specified below.
     # @option options [String] :graph_name name of graph to use in graph statements
     # @option options [String] :graph_source graph traversal source
     # @option options [String] :graph_alias alias to use for the graph traversal object in graph statements
@@ -59,7 +61,13 @@ module Dse
       future = @delegate_cluster.connect_async(options[:keyspace])
       # We want to actually return a DSE session upon successful connection.
       future.then do |cassandra_session|
-        Dse::Session.new(cassandra_session, Dse::Graph::Options.new(options), @futures)
+        graph_options = if !options[:graph_options].nil?
+                          Cassandra::Util.assert_instance_of(Dse::Graph::Options, options[:graph_options])
+                          options[:graph_options]
+                        else
+                          Dse::Graph::Options.new(options)
+                        end
+        Dse::Session.new(cassandra_session, graph_options, @futures)
       end
     end
 
