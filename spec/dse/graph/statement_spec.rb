@@ -13,7 +13,7 @@ module Dse
       let(:basic_graph_options) { Dse::Graph::Options.new(graph_name: 'mygraph') }
       context :constructor do
         it 'should work with minimal arguments' do
-          statement = Statement.new('g.V()', nil)
+          statement = Statement.new('g.V()')
           expect(statement.statement).to eq('g.V()')
           expect(statement.parameters).to be_nil
           expect(statement.options).to be_nil

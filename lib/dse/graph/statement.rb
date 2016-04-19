@@ -24,10 +24,10 @@ module Dse
       end
 
       # @param statement [String] graph statement
-      # @param parameters [Hash<String, String>] parameters to the statement
-      # @param options [Hash, Options] ({}) graph options
+      # @param parameters [Hash<String, String>] (nil) parameters to the statement
+      # @param options [Hash, Options] (nil) graph options
       # @param idempotent [Boolean] (false) whether or not the statement is idempotent
-      def initialize(statement, parameters, options = nil, idempotent = false)
+      def initialize(statement, parameters = nil, options = nil, idempotent = false)
         # Save off statement and idempotent; easy stuff.
         @statement = statement.freeze
         @idempotent = idempotent.freeze
