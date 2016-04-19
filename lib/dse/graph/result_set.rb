@@ -20,6 +20,9 @@ module Dse
       include Enumerable
       extend Forwardable
 
+      # @private -- just for ==/eql?
+      attr_reader :parsed_results
+
       # @!method execution_info
       #   Query execution information, such as number of retries and all tried hosts, etc.
       #   @return [Cassandra::Execution::Info]
@@ -81,8 +84,20 @@ module Dse
       end
 
       # @private
+      def eql?(other)
+        other.is_a?(ResultSet) && \
+          @parsed_results == other.parsed_results
+      end
+      alias == eql?
+
+      # @private
+      def hash
+        @hash ||= 31 * 17 + @parsed_results.hash
+      end
+
+      # @private
       def inspect
-        "#<Dse::ResultSet:0x#{object_id.to_s(16)}>"
+        "#<Dse::ResultSet:0x#{object_id.to_s(16)} []=#{@parsed_results.inspect}>"
       end
     end
   end

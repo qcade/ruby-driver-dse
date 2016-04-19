@@ -100,8 +100,7 @@ module Dse
         "#<Dse::Graph::Vertex:0x#{object_id.to_s(16)} " \
           "@id=#{@id.inspect}, " \
           "@label=#{@label.inspect}, " \
-          "@properties=#{@properties.inspect}, " \
-          "@type=#{@type.inspect}>"
+          "@properties=#{@properties.inspect}>"
       end
     end
   end
