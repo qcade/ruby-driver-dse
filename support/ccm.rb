@@ -730,6 +730,18 @@ module CCM extend self
       start
     end
 
+    def enable_graph
+      stop
+      @ccm.exec('setworkload', 'graph')
+      start('-Dcassandra.ignore_dc=true')
+    end
+
+    def disable_graph
+      stop
+      @ccm.exec('setworkload', 'cassandra')
+      start('-Dcassandra.ignore_dc=true')
+    end
+
     def setup_schema(schema)
       schema.strip!
       schema.chomp!(";")
@@ -758,6 +770,20 @@ module CCM extend self
         end
 
         @session.execute("USE system")
+      end
+    rescue Cassandra::Errors::NoHostsAvailable => e
+      if e.errors.first.last.is_a?(Cassandra::Errors::ServerError)
+        $stderr.puts "#{e.class.name}: #{e.message}, retrying..."
+        retry
+      end
+
+      raise
+    end
+
+    def setup_graph_schema(schema, graph_name)
+      Retry.with_attempts(5) do
+        start
+        @session.execute_graph(schema, graph_name: graph_name, graph_write_consistency: :all)
       end
     rescue Cassandra::Errors::NoHostsAvailable => e
       if e.errors.first.last.is_a?(Cassandra::Errors::ServerError)
@@ -869,15 +895,24 @@ module CCM extend self
     @raw_version
   end
 
-  def setup_cluster(no_dc = 1, no_nodes_per_dc = 3)
+  def setup_graph_cluster(no_dc = 1, no_nodes_per_dc = 3)
+    setup_cluster(no_dc, no_nodes_per_dc, true)
+  end
+
+  def setup_cluster(no_dc = 1, no_nodes_per_dc = 3, enable_graph = false)
     parse_version
-    cluster_name = 'ruby-driver-' + "#{@dse ? 'dse' : 'cassandra'}" + "-#{@raw_version}" + '-test-cluster'
+
+    if enable_graph
+      cluster_name = 'ruby-driver-dse_graph' + "-#{@raw_version}" + '-test-cluster'
+    else
+      cluster_name = 'ruby-driver-' + "#{@dse ? 'dse' : 'cassandra'}" + "-#{@raw_version}" + '-test-cluster'
+    end
 
     if @current_cluster && @current_cluster.name == cluster_name
       unless @current_cluster.nodes_count == (no_dc * no_nodes_per_dc) && @current_cluster.datacenters_count == no_dc
         @current_cluster.stop
         remove_cluster(@current_cluster.name)
-        create_cluster(cluster_name, @raw_version, no_dc, no_nodes_per_dc)
+        create_cluster(cluster_name, @raw_version, no_dc, no_nodes_per_dc, enable_graph)
       end
 
       @current_cluster.start
@@ -890,11 +925,11 @@ module CCM extend self
       unless @current_cluster.nodes_count == (no_dc * no_nodes_per_dc) && @current_cluster.datacenters_count == no_dc
         @current_cluster.stop
         remove_cluster(@current_cluster.name)
-        create_cluster(cluster_name, @raw_version, no_dc, no_nodes_per_dc)
+        create_cluster(cluster_name, @raw_version, no_dc, no_nodes_per_dc, enable_graph)
       end
     else
       @current_cluster && @current_cluster.stop
-      create_cluster(cluster_name, @raw_version, no_dc, no_nodes_per_dc)
+      create_cluster(cluster_name, @raw_version, no_dc, no_nodes_per_dc, enable_graph)
     end
 
     @current_cluster.start
@@ -957,7 +992,7 @@ module CCM extend self
     nil
   end
 
-  def create_cluster(name, version, datacenters, nodes_per_datacenter)
+  def create_cluster(name, version, datacenters, nodes_per_datacenter, enable_graph)
     nodes = Array.new(datacenters, nodes_per_datacenter).join(':')
 
     if @dse && version.start_with?('5.0')
@@ -1015,6 +1050,10 @@ module CCM extend self
 
     ccm.exec('updateconf', *config)
     ccm.exec('populate', '-n', nodes, '-i', '127.0.0.')
+
+    if enable_graph
+      ccm.exec('setworkload', 'graph')
+    end
 
     clusters << @current_cluster = Cluster.new(name, ccm, firewall, nodes_per_datacenter * datacenters, datacenters,
                                                [], @dse)
