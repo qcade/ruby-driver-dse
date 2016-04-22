@@ -1,3 +1,9 @@
+# encoding: utf-8
+
+#--
+# Copyright 2013-2016 DataStax, Inc.
+#++
+
 module Dse
   # Cluster represents a DSE cluster. It serves as a
   # {Dse::Session session factory} and a collection of metadata. It wraps

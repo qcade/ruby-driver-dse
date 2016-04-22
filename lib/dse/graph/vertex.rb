@@ -36,9 +36,6 @@ module Dse
 
       # @private
       def initialize(id, label, properties)
-        # Validate args; this isn't an edge unless all args are non-nil.
-        assert_not_empty(id, 'Cannot create Vertex: id must not be empty')
-        assert_not_empty(label, 'Cannot create Vertex: label must not be empty')
         @id = id
         @label = label
 

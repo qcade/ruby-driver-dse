@@ -79,6 +79,11 @@ module Dse
         result
       end
 
+      # @return whether or not this options object is configured for the analytics graph source.
+      def is_analytics?
+        @real_options[:graph_source] == 'a'
+      end
+
       # @private
       def as_payload
         graph_options = DEFAULT_GRAPH_OPTIONS.merge(@real_options)

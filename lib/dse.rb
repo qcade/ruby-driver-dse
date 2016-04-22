@@ -41,6 +41,13 @@ module Dse
   else
     options[:cluster_klass] = Dse::Cluster
     driver = ::Cassandra::Driver.new(options)
+
+    # Wrap the load-balancing policy that we'd otherwise run with, with a host-targeting policy.
+    # We do this before driver.connect because driver.connect saves off the policy in the cluster
+    # registry and does a few other things.
+
+    lbp = driver.load_balancing_policy
+    driver.load_balancing_policy = Dse::LoadBalancing::Policies::HostTargeting.new(lbp)
     driver.connect(hosts)
   end
 end
@@ -48,11 +55,6 @@ end
 require 'dse/cluster'
 require 'dse/session'
 require 'dse/version'
-require 'dse/graph/edge'
-require 'dse/graph/options'
-require 'dse/graph/path'
-require 'dse/graph/result'
-require 'dse/graph/result_set'
-require 'dse/graph/statement'
-require 'dse/graph/vertex'
-require 'dse/graph/vertex_property'
+require 'dse/graph'
+require 'dse/load_balancing/policies/host_targeting'
+require 'dse/statements'

@@ -9,6 +9,8 @@ module Dse
     # Encapsulates a graph statement, parameters, options, and idempotency. This is primarily useful for
     # re-issuing the same statement multiple times the same way.
     class Statement
+      include Cassandra::Statement
+
       # @return [String] graph statement string
       attr_reader :statement
       # @return [Hash<String, String>] parameters to the statement
@@ -17,11 +19,6 @@ module Dse
       attr_reader :options
       # @private
       attr_reader :simple_statement
-
-      # @return [Boolean] whether or not the statement is idempotent
-      def idempotent?
-        @idempotent
-      end
 
       # @param statement [String] graph statement
       # @param parameters [Hash<String, String>] (nil) parameters to the statement
@@ -65,6 +62,11 @@ module Dse
       end
 
       # @private
+      def accept(client, options)
+        simple_statement.accept(client, options)
+      end
+
+      # @private
       def eql?(other)
         other.is_a?(Statement) && \
           @statement == other.statement && \
@@ -93,6 +95,14 @@ module Dse
           "@parameters=#{@parameters.inspect}, " \
           "@options=#{@options.inspect}, " \
           "@idempotent=#{@idempotent.inspect}>"
+      end
+
+      protected
+
+      # @private
+      def method_missing(method, *args, &block)
+        # Delegate unrecognized method calls to our embedded statement.
+        @simple_statement.send(method, *args, &block)
       end
     end
   end

@@ -20,13 +20,6 @@ module Dse
           cons_args[2] = {}
           Vertex.new(*cons_args)
         end
-
-        %w(id label).each_with_index do |arg_name, ind|
-          it "should yell if #{arg_name} is blank" do
-            cons_args[ind] = cons_args[ind].is_a?(Hash) ? {} : ''
-            expect { Vertex.new(*cons_args) }.to raise_error(ArgumentError)
-          end
-        end
       end
     end
   end
