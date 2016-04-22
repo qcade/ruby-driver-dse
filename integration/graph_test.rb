@@ -17,6 +17,7 @@
 #++
 
 require File.dirname(__FILE__) + '/integration_test_case.rb'
+require 'set'
 
 class GraphTest < IntegrationTestCase
   def self.before_suite
@@ -411,4 +412,26 @@ class GraphTest < IntegrationTestCase
     assert_equal 6, @@session.execute_graph(graph_statement).size
   end
 
+  # Test for running analytics queries against the analytics master
+  #
+  # test_run_analytics_on_master tests that graph statements run against an analytics source
+  # execute on a particular node rather than round-robin.
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-195
+  # @expected_result graph statements should execute consistently on the analytics master
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_run_analytics_on_master
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    # Run a query three times and verify that we always run against the same node.
+    hosts = Set.new
+    3.times do
+      hosts << @@session.execute_graph('g.V().count()', graph_source: 'a').execution_info.hosts.last.ip
+    end
+    assert_equal 1, hosts.size
+  end
 end

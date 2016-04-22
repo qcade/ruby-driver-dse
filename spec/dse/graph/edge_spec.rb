@@ -24,14 +24,6 @@ module Dse
           cons_args[2] = {}
           Edge.new(*cons_args)
         end
-
-        ['id', 'label', nil, 'in_v', 'in_v_label', 'out_v', 'out_v_label'].each_with_index do |arg_name, ind|
-          next if arg_name.nil?
-          it "should yell if #{arg_name} is blank" do
-            cons_args[ind] = cons_args[ind].is_a?(Hash) ? {} : ''
-            expect { Edge.new(*cons_args) }.to raise_error(ArgumentError)
-          end
-        end
       end
     end
   end

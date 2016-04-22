@@ -6,7 +6,7 @@ require 'dse'
 
 def emit_result(result)
   # Emit JSON output of each result.
-  puts "Number of results: #{result.size}"
+  puts "Number of results: #{result.size} on #{result.execution_info.hosts.last.ip}"
   result.each do |r|
     p r
     puts r.value if r.is_a? Dse::Graph::Result

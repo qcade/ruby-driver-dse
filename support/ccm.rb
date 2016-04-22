@@ -1052,7 +1052,7 @@ module CCM extend self
     ccm.exec('populate', '-n', nodes, '-i', '127.0.0.')
 
     if enable_graph
-      ccm.exec('setworkload', 'graph')
+      ccm.exec('setworkload', 'graph,spark')
     end
 
     clusters << @current_cluster = Cluster.new(name, ccm, firewall, nodes_per_datacenter * datacenters, datacenters,

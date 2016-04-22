@@ -5,5 +5,8 @@
 #++
 
 module Dse
-  VERSION = '1.0.0.rc.1'.freeze
+  # @private
+  module Statements
+  end
 end
+require 'dse/statements/host_targeting'

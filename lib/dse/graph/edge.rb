@@ -27,14 +27,6 @@ module Dse
 
       # @private
       def initialize(id, label, properties, in_v, in_v_label, out_v, out_v_label)
-        # Validate args; this isn't an edge unless all args are non-nil.
-        assert_not_empty(id, 'Cannot create Edge: id must not be empty')
-        assert_not_empty(label, 'Cannot create Edge: label must not be empty')
-        assert_not_empty(in_v, 'Cannot create Edge: in_v must not be empty')
-        assert_not_empty(in_v_label, 'Cannot create Edge: in_v_label must not be empty')
-        assert_not_empty(out_v, 'Cannot create Edge: out_v must not be empty')
-        assert_not_empty(out_v_label, 'Cannot create Edge: out_v_label must not be empty')
-
         @id = id
         @label = label
         @properties = properties
