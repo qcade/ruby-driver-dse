@@ -426,6 +426,22 @@ class GraphTest < IntegrationTestCase
   #
   def test_run_analytics_on_master
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+    skip('Spark tests are not operable right now')
+
+    # There's a good chance the analytics server isn't quite ready for us yet. So, run
+    # repeatedly until we get a result.
+    num_attempts = 0
+    while num_attempts < 10
+      begin
+        num_attempts += 1
+
+        @@session.execute_graph('g.V().count()', graph_source: 'a')
+        break
+      rescue => e
+        puts "Analytics query attempt #{num_attempts} failed: #{e}"
+        sleep 10
+      end
+    end
 
     # Run a query three times and verify that we always run against the same node.
     hosts = Set.new
