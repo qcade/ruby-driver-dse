@@ -17,6 +17,9 @@ module Dse
     attr_reader :graph_options
 
     # @private
+    DEFAULT_GRAPH_TIMEOUT = 32
+
+    # @private
     def initialize(cassandra_session, graph_options, futures_factory)
       @cassandra_session = cassandra_session
       @graph_options = graph_options
@@ -55,6 +58,7 @@ module Dse
 
       graph_options = @graph_options.merge(graph_statement.options)
       options[:payload] = graph_options.as_payload
+      options[:timeout] = DEFAULT_GRAPH_TIMEOUT unless options[:timeout]
 
       if graph_options.is_analytics?
         @cassandra_session.execute_async('CALL DseClientTool.getAnalyticsGraphServer()').then do |rows|
