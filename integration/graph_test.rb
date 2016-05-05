@@ -26,12 +26,11 @@ class GraphTest < IntegrationTestCase
     else
       @@ccm_cluster = CCM.setup_graph_cluster(1, 3)
 
-      @@cluster = Dse.cluster
+      @@cluster = Dse.cluster(timeout: 32)
       @@session = @@cluster.connect
 
-      # Disabled for now until DSP-9410 is resolved.
-      #self.remove_graph(@@session, 'users')
-      #self.remove_graph(@@session, 'test')
+      self.remove_graph(@@session, 'users')
+      self.remove_graph(@@session, 'test')
       self.create_graph(@@session, 'users')
       self.create_graph(@@session, 'test')
       @@session.graph_options.graph_name = 'users'
@@ -63,8 +62,20 @@ class GraphTest < IntegrationTestCase
       peter.addEdge('created', lop, 'weight', 0.2f);
       GRAPH
 
+      @@ccm_cluster.setup_graph_schema(<<-GRAPH, 'users')
+      schema.propertyKey('multi_key').Text().multiple().ifNotExists().create();
+      schema.propertyKey('single_key').Text().single().ifNotExists().create();
+      schema.vertexLabel('namings').properties('multi_key', 'single_key').ifNotExists().create();
+      schema.propertyKey('country').Text().ifNotExists().create();
+      schema.propertyKey('descent').Text().ifNotExists().create();
+      schema.propertyKey('origin').Text().properties('country', 'descent').ifNotExists().create();
+      schema.vertexLabel('master').properties('name', 'origin').ifNotExists().create();
+      schema.propertyKey('multi_origin').Text().multiple().properties('country').ifNotExists().create();
+      schema.vertexLabel('multi_master').properties('name', 'multi_origin').ifNotExists().create();
+      GRAPH
+
       # Adding a sleep here to allow for schema to propagate to all graph nodes
-      sleep(2)
+      sleep(5)
     end
   end
 
@@ -74,38 +85,22 @@ class GraphTest < IntegrationTestCase
 
   def self.create_graph(session, graph_name, rf = 3)
     replication_config = "{'class' : 'SimpleStrategy', 'replication_factor' : #{rf}}"
-    session.execute_graph("system.graph('#{graph_name}').option('graph.replication_config').set(\"#{replication_config}\").ifNotExists().create()")
-
-    begin
-      session.execute_graph("schema.config().option('graph.schema_mode').set(com.datastax.bdp.graph.api.model.Schema.Mode.Production)", graph_name: graph_name)
-    rescue Cassandra::Errors::InvalidError => e
-      # Catch DSP-9199. Continuing for now.
-      raise e unless e.message.include?('Shared data commit failed due to concurrent modification')
-    end
+    session.execute_graph("system.graph('#{graph_name}').option('graph.replication_config').set(\"#{replication_config}\").ifNotExists().create()", timeout: 182)
+    session.execute_graph("schema.config().option('graph.schema_mode').set(com.datastax.bdp.graph.api.model.Schema.Mode.Production)", graph_name: graph_name)
+    session.execute_graph("schema.config().option('graph.allow_scan').set('true')", graph_name: graph_name)
   end
 
   def self.remove_graph(session, graph)
-    begin
-      session.execute_graph('g', graph_name: graph)
-    rescue Cassandra::Errors::NoHostsAvailable => e
-      e.errors.each do |(host, error)|
-        raise e unless (error.is_a?(Cassandra::Errors::ServerError) && error.message.include?("Graph '#{graph}' does not exist"))
-      end
-      return
-    end
-
-    begin
-      session.execute_graph("system.graph('#{graph}').drop()")
-    rescue Cassandra::Errors::InvalidError => e
-      # Catch DSP-9379. Continuing for now.
-      raise e unless e.message.include?('Cannot drop graph while state is Dropping')
+    if session.execute_graph("system.graph('#{graph}').exists()", timeout: 182).first.value
+      session.execute_graph("system.graph('#{graph}').drop()", timeout: 182)
     end
   end
 
   def self.reset_schema(session, graph)
-    # These won't work reliably until DSP-9405 is resolved.
+    session.execute_graph("schema.config().option('graph.traversal_sources.default.evaluation_timeout').set('PT120S')", graph_name: graph_name)
     session.execute_graph('g.V().drop().iterate()', graph_name: graph)
     session.execute_graph('schema.clear()', graph_name: graph)
+    session.execute_graph("schema.config().option('graph.traversal_sources.default.evaluation_timeout').set('PT30S')", graph_name: graph_name)
   end
 
   # Test for basic graph system queries
@@ -421,9 +416,6 @@ class GraphTest < IntegrationTestCase
   # @jira_ticket RUBY-195
   # @expected_result graph statements should execute consistently on the analytics master
   #
-  # @test_assumptions Graph-enabled Dse cluster.
-  # @test_category dse:graph
-  #
   def test_run_analytics_on_master
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
     skip('Spark tests are not operable right now')
@@ -450,4 +442,331 @@ class GraphTest < IntegrationTestCase
     end
     assert_equal 1, hosts.size
   end
+
+  def validate_vertex(vertex, label, props, prop_values, meta_properties = nil)
+    assert_equal label, vertex.label
+
+    id = vertex.id
+    refute_nil id['~label']
+    refute_nil id['member_id']
+    refute_nil id['community_id']
+
+    vertex.properties.each_pair do |property_name, property_values|
+      assert props.include?(property_name), "expected #{props}, have #{property_name}"
+
+      property_values.each do |property_value|
+        assert prop_values.include?(property_value.value), "expected #{prop_values}, have #{property_value.value}"
+
+        property_id = property_value.id
+        refute_nil property_id['local_id']
+        refute_nil property_id['~type']
+        assert_equal id, property_id['out_vertex']
+
+        if meta_properties && meta_properties[0] == property_name
+          assert_equal meta_properties[1], property_value.properties
+        else
+          assert_empty property_value.properties
+        end
+      end
+    end
+  end
+
+  # Test for retrieving vertex metadata
+  #
+  # test_can_retrieve_simple_vertex_metadata tests that graph vertices can be retrieved, as well as their corresponding
+  # metadata. It relies on pre-existing schema and vertex data from 6 vertices. It retrieves each vertex and verifies
+  # that all corresponding metadata is correct.
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-194
+  # @expected_result vertices should be retrieved and their metadata should be complete
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_can_retrieve_simple_vertex_metadata
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    results = @@session.execute_graph('g.V()')
+    assert_equal 6, results.size
+
+    labels = ['software', 'software', 'person', 'person', 'person', 'person']
+    property_names = [['name', 'lang'], ['name', 'lang'], ['name', 'age'], ['name', 'age'], ['name', 'age'],
+                      ['name', 'age']]
+    property_values = [['lop', 'java'], ['ripple', 'java'], ['peter', 35], ['marko', 29], ['vadas', 27],
+                       ['josh', 32]]
+
+    results.each_with_index do |v, i|
+      validate_vertex(v, labels[i], property_names[i], property_values[i])
+    end
+  end
+
+  # Test for retrieving multi-value vertex property metadata
+  #
+  # test_can_retrieve_multi_value_vertex_properties tests that multi-value vertex property metadata is present in
+  # vertices that has them. It relies on pre-existing schema, which includes a label 'namings', and two vertex properties
+  # 'multi_key' and 'single_key'. 'multi_key' supports multiple property values while 'single_key' does not. It first
+  # tests that it's possible to insert a single value to a multi-value property, verifying its metadata. It then verifies
+  # the metadata for multiple values in a multi-value property. It then performs the same with a single-value property,
+  # verifying that if multiple values are entered, the last entered value is the one stored as the property value. It
+  # finally verifies that by default, property values are of the single-value type.
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-194
+  # @expected_result multi-value vertex property metadata should be complete
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_can_retrieve_multi_value_vertex_properties
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    # Single value in multi-value property
+    @@session.execute_graph("graph.addVertex(label, 'namings', 'multi_key', 'value')")
+    vertex = @@session.execute_graph("g.V().has('namings', 'multi_key', 'value')").first
+    assert_equal 1, vertex.properties['multi_key'].size
+    assert_equal 'value', vertex.properties['multi_key'][0].value
+    @@session.execute_graph("g.V().has('namings', 'multi_key', 'value').drop()")
+
+    # Multiple values in multi-value property
+    @@session.execute_graph("graph.addVertex(label, 'namings', 'multi_key', 'value0', 'multi_key', 'value1')")
+    vertex = @@session.execute_graph("g.V().has('namings', 'multi_key', 'value0')").first
+    assert_equal 2, vertex.properties['multi_key'].size
+    assert_equal 'value0', vertex.properties['multi_key'][0].value
+    assert_equal 'value1', vertex.properties['multi_key'][1].value
+    @@session.execute_graph("g.V().has('namings', 'multi_key', 'value0').drop()")
+
+    # Single value in single-value property
+    @@session.execute_graph("graph.addVertex(label, 'namings', 'single_key', 'value')")
+    vertex = @@session.execute_graph("g.V().has('namings', 'single_key', 'value')").first
+    assert_equal 1, vertex.properties['single_key'].size
+    assert_equal 'value', vertex.properties['single_key'][0].value
+    @@session.execute_graph("g.V().has('namings', 'single_key', 'value').drop()")
+
+    # Multiple values in single-value property
+    @@session.execute_graph("graph.addVertex(label, 'namings', 'single_key', 'value0', 'single_key', 'value1')")
+    vertex = @@session.execute_graph("g.V().has('namings', 'single_key', 'value1')").first
+    assert_equal 1, vertex.properties['single_key'].size
+    assert_equal 'value1', vertex.properties['single_key'][0].value
+    @@session.execute_graph("g.V().has('namings', 'single_key', 'value1').drop()")
+
+    # Properties by default are single-value
+    @@session.execute_graph("graph.addVertex(label, 'person', 'name', 'john', 'name', 'doe')")
+    vertex = @@session.execute_graph("g.V().has('person', 'name', 'doe')").first
+    assert_equal 1, vertex.properties['name'].size
+    assert_equal 'doe', vertex.properties['name'][0].value
+    @@session.execute_graph("g.V().has('person', 'name', 'doe').drop()")
+  end
+
+  # Test for retrieving vertex property properties metadata
+  #
+  # test_can_retrieve_vertex_property_meta_properties tests that vertex property properties metadata is present in
+  # vertex properties that have them. It relies on pre-existing schema, which includes a label 'master', and a vertex
+  # property 'origin', which has two properties of itself 'country' and 'descent'. It first adds a new vertex which
+  # use these schema values. It then retrieves the vertex and verifies that the metadata is correct, including the
+  # presence of the vertex property properties.
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-194
+  # @expected_result vertex property properties metadata should be complete
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_can_retrieve_vertex_property_meta_properties
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    @@session.execute_graph("yoda = graph.addVertex(label, 'master', 'name', 'Yoda');
+                             yoda.property('origin', 'unknown', 'country', 'Galactic Republic', 'descent', 'Jedi')")
+
+    vertex =  @@session.execute_graph("g.V().has('master', 'name', 'Yoda')").first
+    meta_properties = ['origin', {"country" => "Galactic Republic", "descent" => "Jedi"}]
+    validate_vertex(vertex, 'master', ['name', 'origin'], ['Yoda', 'unknown'], meta_properties)
+
+    @@session.execute_graph("g.V().has('master', 'name', 'Yoda').drop()")
+  end
+
+  # Test for retrieving multi-value properties and property properties metadata
+  #
+  # test_can_retrieve_multi_value_vertex_properties_with_meta_properties tests that both multi-value vertex properties
+  # and vertex property properties metadata is present in vertices that have both of them. It relies on pre-existing
+  # schema, which includes a label 'multi_master', and a vertex property 'multi_origin', which is a multi-value
+  # property has two properties of itself 'country' and 'descent'. It first adds a new vertex which
+  # use these schema values. It then retrieves the vertex and verifies that the metadata is correct, including the
+  # presence of both the multi-value property and the vertex property properties.
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-194
+  # @expected_result vertex property properties metadata should be complete
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_can_retrieve_multi_value_vertex_properties_with_meta_properties
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    @@session.execute_graph("yoda = graph.addVertex(label, 'multi_master', 'name', 'Yoda');
+                             yoda.property('multi_origin', 'unknown0', 'country', 'Galactic Republic');
+                             yoda.property('multi_origin', 'unknown1', 'country', 'Jedi Order')")
+
+    vertex =  @@session.execute_graph("g.V().has('multi_master', 'name', 'Yoda')").first
+    assert_equal 2, vertex.properties['multi_origin'].size
+
+    property_one = vertex.properties['multi_origin'][0]
+    assert_equal 'unknown0', property_one.value
+    assert_equal property_one.properties, {'country' => 'Galactic Republic'}
+
+    property_two = vertex.properties['multi_origin'][1]
+    assert_equal 'unknown1', property_two.value
+    assert_equal property_two.properties, {'country' => 'Jedi Order'}
+
+    @@session.execute_graph("g.V().has('multi_master', 'name', 'Yoda').drop()")
+  end
+
+  def validate_edge(edge, label, in_v, out_v, properties = nil)
+    assert_equal label, edge.label
+
+    id = edge.id
+    refute_nil id['out_vertex']
+    refute_nil id['in_vertex']
+    refute_nil id['local_id']
+    refute_nil id['~type']
+
+    assert_equal in_v[0], edge.in_v_label
+    assert_equal in_v[1]['~label'], edge.in_v['~label']
+    assert_equal in_v[1]['member_id'], edge.in_v['member_id']
+
+    assert_equal out_v[0], edge.out_v_label
+    assert_equal out_v[1]['~label'], edge.out_v['~label']
+    assert_equal out_v[1]['member_id'], edge.out_v['member_id']
+
+    if properties
+      assert_equal properties, edge.properties
+    else
+      assert_empty edge.properties
+    end
+  end
+
+  # Test for retrieving edge metadata
+  #
+  # test_can_retrieve_simple_edge_metadata tests that graph edges can be retrieved, as well as their corresponding
+  # metadata. It relies on pre-existing schema and edge data from 6 vertices. It retrieves each edge and verifies
+  # that all corresponding metadata is correct.
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-194
+  # @expected_result edges should be retrieved and their metadata should be complete
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_can_retrieve_simple_edge_metadata
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    labels = ['created', 'created', 'knows' , 'knows', 'created', 'created']
+    in_v = [['software', {"~label"=>"software", "member_id"=>1}],
+            ['software', {"~label"=>"software", "member_id"=>1}],
+            ['person', {"~label"=>"person", "member_id"=>3}],
+            ['person', {"~label"=>"person", "member_id"=>4}],
+            ['software', {"~label"=>"software", "member_id"=>1}],
+            ['software', {"~label"=>"software", "member_id"=>5}]
+    ]
+    out_v = [['person', {"~label"=>"person", "member_id"=>0}],
+             ['person', {"~label"=>"person", "member_id"=>2}],
+             ['person', {"~label"=>"person", "member_id"=>2}],
+             ['person', {"~label"=>"person", "member_id"=>2}],
+             ['person', {"~label"=>"person", "member_id"=>4}],
+             ['person', {"~label"=>"person", "member_id"=>4}]
+    ]
+    properties = [{"weight"=>0.2}, {"weight"=>0.4}, {"weight"=>0.5}, {"weight"=>1.0}, {"weight"=>0.4}, {"weight"=>1.0}]
+
+    results = @@session.execute_graph('g.E()')
+    assert_equal 6, results.size
+
+    results.each_with_index do |e, i|
+      validate_edge(e, labels[i], in_v[i], out_v[i], properties[i])
+    end
+  end
+
+  # Test for retrieving path metadata
+  #
+  # test_can_retrieve_path_metadata tests that graph paths can be retrieved, as well as their corresponding
+  # metadata. It relies on pre-existing schema, vertex, and edge data. It performs a path query which yields two
+  # possible routes. It then iterates through each of these routes and verifies that the path metadata is complete.
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-194
+  # @expected_result paths should be retrieved and their metadata should be complete
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_can_retrieve_path_metadata
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    results = @@session.execute_graph("g.V().hasLabel('person').has('name', 'marko').as('a')" +
+                                  ".outE('knows').inV().as('c', 'd').outE('created').as('e', 'f', 'g').inV().path()")
+    assert_equal 2, results.size
+
+    first_path = results[0].as_path
+    assert_instance_of(Dse::Graph::Path, first_path)
+    assert_equal [["a"], [], ["c", "d"], ["e", "f", "g"], []], first_path.labels
+
+    path_objects = first_path.objects
+    assert_equal 5, path_objects.size
+
+    assert_equal 'marko', path_objects[0].properties['name'].first.value
+    assert_equal 'knows', path_objects[1].label
+    assert_equal 'josh', path_objects[2].properties['name'].first.value
+    assert_equal 'created', path_objects[3].label
+    assert_equal 'lop', path_objects[4].properties['name'].first.value
+    assert_equal 'java', path_objects[4].properties['lang'].first.value
+
+    second_path = results[1].as_path
+    assert_instance_of(Dse::Graph::Path, second_path)
+    assert_equal [["a"], [], ["c", "d"], ["e", "f", "g"], []], second_path.labels
+
+    path_objects = second_path.objects
+    assert_equal 5, path_objects.size
+
+    assert_equal 'marko', path_objects[0].properties['name'].first.value
+    assert_equal 'knows', path_objects[1].label
+    assert_equal 'josh', path_objects[2].properties['name'].first.value
+    assert_equal 'created', path_objects[3].label
+    assert_equal 'ripple', path_objects[4].properties['name'].first.value
+    assert_equal 'java', path_objects[4].properties['lang'].first.value
+  end
+
+  # Test for casting result into graph objects
+  #
+  # test_raise_error_on_casting tests that generic graph Results cannot be casted to object types of Vertex, Edge or
+  # Path if the underlying result is not of the appropriate type.
+  #
+  # @expected_errors [ArgumentError] When the Result object is casted into Vertex, Edge or Path.
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-194
+  # @expected_result an ArgumentError should be raised during casting.
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_raise_error_on_casting
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    result = @@session.execute_graph("g.V().count()").first
+
+    assert_raises(ArgumentError) do
+      result.as_vertex
+    end
+
+    assert_raises(ArgumentError) do
+      result.as_edge
+    end
+
+    assert_raises(ArgumentError) do
+      result.as_path
+    end
+  end
+
 end
