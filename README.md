@@ -87,7 +87,7 @@ results.each do |e|
    puts "#{e.label}:"
    
    # Now the id's of the two vertices that this edge connects.
-   puts "  in id: #{e.in_v_}"
+   puts "  in id: #{e.in_v}"
    puts "  out id: #{e.out_v}"
    
    # Edge properties are simple key-value pairs; sort of like
