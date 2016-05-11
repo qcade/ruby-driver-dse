@@ -39,6 +39,7 @@ module Dse
       # @return [Vertex] a vertex domain object
       # @raise [ArgumentError] if the result data does not represent a vertex
       def as_vertex
+        Cassandra::Util.assert_instance_of(::Hash, @value)
         Dse::Graph::Vertex.new(@value['id'], @value['label'], @value.fetch('properties', {}))
       end
 
@@ -46,6 +47,7 @@ module Dse
       # @return [Edge] an edge domain object.
       # @raise [ArgumentError] if the result data does not represent an edge.
       def as_edge
+        Cassandra::Util.assert_instance_of(::Hash, @value)
         Dse::Graph::Edge.new(@value['id'], @value['label'], @value.fetch('properties', {}),
                              @value['inV'], @value['inVLabel'],
                              @value['outV'], @value['outVLabel'])
@@ -54,6 +56,7 @@ module Dse
       # Coerce this result into a {Path} object.
       # @return [Path] a path domain object.
       def as_path
+        Cassandra::Util.assert_instance_of(::Hash, @value)
         Dse::Graph::Path.new(@value['labels'], @value['objects'])
       end
 
