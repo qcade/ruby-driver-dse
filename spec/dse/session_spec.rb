@@ -19,7 +19,7 @@ module Dse
         expected_graph_statement = Dse::Graph::Statement.new('g.V()', nil, session.graph_options)
         expect(cassandra_session).to receive(:execute_async)
           .with(expected_graph_statement, timeout: 32,
-                payload: { 'graph-source' => 'default', 'graph-language' => 'gremlin-groovy' }).and_return(future)
+                payload: { 'graph-source' => 'g', 'graph-language' => 'gremlin-groovy' }).and_return(future)
         expect(future).to receive(:then)
         session.execute_graph_async('g.V()')
       end
@@ -28,7 +28,7 @@ module Dse
         expected_graph_statement = Dse::Graph::Statement.new('g.V().limit(n)', {n: 2}, session.graph_options)
         expect(cassandra_session).to receive(:execute_async)
           .with(expected_graph_statement, arguments: { n: 2 }, timeout: 32,
-                                  payload: { 'graph-source' => 'default', 'graph-language' => 'gremlin-groovy' })
+                                  payload: { 'graph-source' => 'g', 'graph-language' => 'gremlin-groovy' })
           .and_return(future)
         expect(future).to receive(:then)
         session.execute_graph_async('g.V().limit(n)', arguments: { n: 2 })
@@ -75,7 +75,7 @@ module Dse
         expect(cassandra_session).to receive(:execute_async)
           .with(graph_statement,
                 random: 'junk', timeout: 32,
-                payload: { 'graph-source' => 'default', 'graph-language' => 'gremlin-groovy', 'graph-name' => 'myg' })
+                payload: { 'graph-source' => 'g', 'graph-language' => 'gremlin-groovy', 'graph-name' => 'myg' })
           .and_return(future)
         expect(future).to receive(:then)
         session.execute_graph_async(graph_statement, random: 'junk')

@@ -10,9 +10,9 @@ module Dse
     #   class Options
     #     # @return [String] name of the targeted graph; required unless the statement is a system query.
     #     attr_accessor :graph_name
-    #     # @return [String] graph traversal source (default "default")
+    #     # @return [String] graph traversal source (default "g")
     #     attr_accessor :graph_source
-    #     # @return [String] alias to use for the graph traversal object (default "g")
+    #     # @return [String] language used in the graph statement (default "gremlin-groovy")
     #     attr_accessor :graph_language
     #     # @return [Cassandra::CONSISTENCIES] read consistency level for graph statement.
     #     #   Overrides the standard statement consistency level. Defaults to ONE in the server,
@@ -28,7 +28,7 @@ module Dse
     class Options
       # @private
       DEFAULT_GRAPH_OPTIONS = {
-        graph_source: 'default',
+        graph_source: 'g',
         graph_language: 'gremlin-groovy'
       }.freeze
 

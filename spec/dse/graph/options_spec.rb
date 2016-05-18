@@ -118,7 +118,7 @@ module Dse
 
       context :as_payload do
         it 'should produce a payload only with non-nil entries' do
-          expect(options.as_payload).to eq('graph-source' => 'default',
+          expect(options.as_payload).to eq('graph-source' => 'g',
                                            'graph-language' => 'gremlin-groovy')
         end
         it 'should include option attributes mixed with defaults' do
