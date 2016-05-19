@@ -97,10 +97,10 @@ class GraphTest < IntegrationTestCase
   end
 
   def self.reset_schema(session, graph)
-    session.execute_graph("schema.config().option('graph.traversal_sources.default.evaluation_timeout').set('PT120S')", graph_name: graph_name)
+    session.execute_graph("schema.config().option('graph.traversal_sources.g.evaluation_timeout').set('PT120S')", graph_name: graph_name)
     session.execute_graph('g.V().drop().iterate()', graph_name: graph)
     session.execute_graph('schema.clear()', graph_name: graph)
-    session.execute_graph("schema.config().option('graph.traversal_sources.default.evaluation_timeout').set('PT30S')", graph_name: graph_name)
+    session.execute_graph("schema.config().option('graph.traversal_sources.g.evaluation_timeout').set('PT30S')", graph_name: graph_name)
   end
 
   # Test for basic graph system queries
