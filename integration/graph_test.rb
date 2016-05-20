@@ -97,10 +97,10 @@ class GraphTest < IntegrationTestCase
   end
 
   def self.reset_schema(session, graph)
-    session.execute_graph("schema.config().option('graph.traversal_sources.default.evaluation_timeout').set('PT120S')", graph_name: graph_name)
+    session.execute_graph("schema.config().option('graph.traversal_sources.g.evaluation_timeout').set('PT120S')", graph_name: graph_name)
     session.execute_graph('g.V().drop().iterate()', graph_name: graph)
     session.execute_graph('schema.clear()', graph_name: graph)
-    session.execute_graph("schema.config().option('graph.traversal_sources.default.evaluation_timeout').set('PT30S')", graph_name: graph_name)
+    session.execute_graph("schema.config().option('graph.traversal_sources.g.evaluation_timeout').set('PT30S')", graph_name: graph_name)
   end
 
   # Test for basic graph system queries
@@ -202,27 +202,6 @@ class GraphTest < IntegrationTestCase
     assert_equal 0, session.execute_graph('g.V().count()').first.value
   end
 
-  # Test for setting a graph alias
-  #
-  # test_can_set_graph_alias tests that a graph alias can be specified in the graph options. It also verifies that this
-  # alias is properly used during graph statement execution.
-  #
-  # @since 1.0.0
-  # @jira_ticket RUBY-200
-  # @expected_result the graph alias should be usable during graph query execution
-  #
-  # @test_assumptions Graph-enabled Dse cluster.
-  # @test_category dse:graph
-  #
-  def test_can_set_graph_alias
-    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
-
-    session = @@cluster.connect(graph_name: 'users', graph_alias: 'mygraph')
-
-    assert_equal 'mygraph', session.graph_options.graph_alias
-    assert_equal 6, session.execute_graph('mygraph.V()').size
-  end
-
   # Test for setting graph consistencies
   #
   # test_can_set_graph_consistencies tests that a graph read and write consistencies can be set in the graph options. It
@@ -273,7 +252,7 @@ class GraphTest < IntegrationTestCase
   # Test for using graph options in session and queries
   #
   # test_can_use_graph_options tests that graph options can be used in both sessions and queries. It first creates a
-  # simple Dse::Graph::Options with graph_name and graph_alias parameters set. It then verifies that these settings are
+  # simple Dse::Graph::Options with graph_name and graph_language parameters set. It then verifies that these settings are
   # honored when the graph options is used at session creation by executing a simple query. Finally it verifies that the
   # same graph options can be used at query execution.
   #
@@ -287,20 +266,20 @@ class GraphTest < IntegrationTestCase
   def test_can_use_graph_options
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
-    graph_options = Dse::Graph::Options.new(graph_name: 'users', graph_alias: 'mygraph')
+    graph_options = Dse::Graph::Options.new(graph_name: 'users', graph_language: 'gremlin-groovy')
     assert_equal 'users', graph_options.graph_name
-    assert_equal 'mygraph', graph_options.graph_alias
+    assert_equal 'gremlin-groovy', graph_options.graph_language
 
     session = @@cluster.connect(graph_options: graph_options)
 
     assert_equal 'users', session.graph_name
-    assert_equal 'mygraph', session.graph_options.graph_alias
-    vertices = session.execute_graph('mygraph.V()')
+    assert_equal 'gremlin-groovy', session.graph_options.graph_language
+    vertices = session.execute_graph('g.V()')
     refute_nil vertices
 
     session.close
     session = @@cluster.connect
-    second_vertices = session.execute_graph('mygraph.V()', graph_options: graph_options)
+    second_vertices = session.execute_graph('g.V()', graph_options: graph_options)
     refute_nil second_vertices
     assert_equal vertices, second_vertices
   end
@@ -399,8 +378,8 @@ class GraphTest < IntegrationTestCase
     assert_nil graph_statement.options
     assert_equal 1, @@session.execute_graph(graph_statement).size
 
-    graph_query = 'mygraph.V()'
-    graph_options = Dse::Graph::Options.new({graph_name: 'users', graph_alias: 'mygraph'})
+    graph_query = 'g.V()'
+    graph_options = Dse::Graph::Options.new({graph_name: 'users', graph_language: 'gremlin-groovy'})
     graph_statement = Dse::Graph::Statement.new(graph_query, nil, options = graph_options)
     assert_nil graph_statement.parameters
     refute_nil graph_statement.options

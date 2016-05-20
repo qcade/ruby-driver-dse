@@ -10,10 +10,8 @@ module Dse
     #   class Options
     #     # @return [String] name of the targeted graph; required unless the statement is a system query.
     #     attr_accessor :graph_name
-    #     # @return [String] graph traversal source (default "default")
+    #     # @return [String] graph traversal source (default "g")
     #     attr_accessor :graph_source
-    #     # @return [String] alias to use for the graph traversal object (default "g")
-    #     attr_accessor :graph_alias
     #     # @return [String] language used in the graph statement (default "gremlin-groovy")
     #     attr_accessor :graph_language
     #     # @return [Cassandra::CONSISTENCIES] read consistency level for graph statement.
@@ -30,7 +28,7 @@ module Dse
     class Options
       # @private
       DEFAULT_GRAPH_OPTIONS = {
-        graph_source: 'default',
+        graph_source: 'g',
         graph_language: 'gremlin-groovy'
       }.freeze
 
@@ -38,7 +36,6 @@ module Dse
       OPTION_NAMES = [
         :graph_name,
         :graph_source,
-        :graph_alias,
         :graph_language,
         :graph_read_consistency,
         :graph_write_consistency
@@ -101,7 +98,6 @@ module Dse
         other.is_a?(Options) && \
           @real_options[:graph_name] == other.graph_name && \
           @real_options[:graph_source] == other.graph_source && \
-          @real_options[:graph_alias] == other.graph_alias && \
           @real_options[:graph_language] == other.graph_language && \
           @real_options[:graph_read_consistency] == other.graph_read_consistency && \
           @real_options[:graph_write_consistency] == other.graph_write_consistency
@@ -119,7 +115,6 @@ module Dse
         "#<Dse::Graph::Options:0x#{object_id.to_s(16)} " \
         "@graph_name=#{@real_options[:graph_name].inspect}, " \
         "@graph_source=#{@real_options[:graph_source].inspect}, " \
-        "@graph_alias=#{@real_options[:graph_alias].inspect}, " \
         "@graph_language=#{@real_options[:graph_language].inspect}, " \
         "@graph_read_consistency=#{@real_options[:graph_read_consistency].inspect}, " \
         "@graph_write_consistency=#{@real_options[:graph_write_consistency].inspect}>"

@@ -40,7 +40,6 @@ module Dse
         # init_options should have graph_name set, but that's it.
         expect(init_options.graph_name).to eq('mygraph')
         expect(init_options.graph_source).to be_nil
-        expect(init_options.graph_alias).to be_nil
         expect(init_options.graph_language).to be_nil
         expect(init_options.graph_read_consistency).to be_nil
         expect(init_options.graph_write_consistency).to be_nil
@@ -55,7 +54,6 @@ module Dse
           # options should not have changed.
           expect(options.graph_name).to be_nil
           expect(options.graph_source).to be_nil
-          expect(options.graph_alias).to be_nil
           expect(options.graph_language).to be_nil
           expect(options.graph_read_consistency).to be_nil
           expect(options.graph_write_consistency).to be_nil
@@ -63,7 +61,6 @@ module Dse
           # other should not have changed.
           expect(other.graph_name).to be_nil
           expect(other.graph_source).to eq('other')
-          expect(other.graph_alias).to be_nil
           expect(other.graph_language).to be_nil
           expect(other.graph_read_consistency).to be_nil
           expect(other.graph_write_consistency).to be_nil
@@ -78,7 +75,6 @@ module Dse
           # options should not have changed.
           expect(options.graph_name).to be_nil
           expect(options.graph_source).to be_nil
-          expect(options.graph_alias).to be_nil
           expect(options.graph_language).to be_nil
           expect(options.graph_read_consistency).to be_nil
           expect(options.graph_write_consistency).to be_nil
@@ -93,13 +89,12 @@ module Dse
 
           other = Dse::Graph::Options.new
           other.graph_source = 'other'
-          other.graph_alias = 'myalias'
+          other.graph_language = 'mylang'
           final = options.merge(other)
 
           # options should not have changed.
           expect(options.graph_name).to eq('mygraph')
           expect(options.graph_source).to eq('orig_source')
-          expect(options.graph_alias).to be_nil
           expect(options.graph_language).to be_nil
           expect(options.graph_read_consistency).to be_nil
           expect(options.graph_write_consistency).to be_nil
@@ -107,8 +102,7 @@ module Dse
           # other should not have changed.
           expect(other.graph_name).to be_nil
           expect(other.graph_source).to eq('other')
-          expect(other.graph_alias).to eq('myalias')
-          expect(other.graph_language).to be_nil
+          expect(other.graph_language).to eq('mylang')
           expect(other.graph_read_consistency).to be_nil
           expect(other.graph_write_consistency).to be_nil
 
@@ -116,8 +110,7 @@ module Dse
           # over 'options'
           expect(final.graph_name).to eq('mygraph')
           expect(final.graph_source).to eq('other')
-          expect(final.graph_alias).to eq('myalias')
-          expect(final.graph_language).to be_nil
+          expect(final.graph_language).to eq('mylang')
           expect(final.graph_read_consistency).to be_nil
           expect(final.graph_write_consistency).to be_nil
         end
@@ -125,7 +118,7 @@ module Dse
 
       context :as_payload do
         it 'should produce a payload only with non-nil entries' do
-          expect(options.as_payload).to eq('graph-source' => 'default',
+          expect(options.as_payload).to eq('graph-source' => 'g',
                                            'graph-language' => 'gremlin-groovy')
         end
         it 'should include option attributes mixed with defaults' do

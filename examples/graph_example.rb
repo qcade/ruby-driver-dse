@@ -29,18 +29,18 @@ emit_result(session.execute_graph('g.V().limit(my_limit)',
 puts '-- Run a query whose result is a simple value. --'
 emit_result(session.execute_graph('g.V().count()'))
 
-puts '-- Run a query with a different graph alias. --'
-emit_result(session.execute_graph('m.E().limit(1)', graph_alias: 'm'))
+puts '-- Run a query with the analytics graph source. --'
+emit_result(session.execute_graph('g.E().limit(1)', graph_source: 'a'))
 
 puts '-- Or use a Graph Options object. --'
 options = Dse::Graph::Options.new
-options.graph_alias = 'm'
-emit_result(session.execute_graph('m.E().limit(1)', graph_options: options))
+options.graph_source = 'a'
+emit_result(session.execute_graph('g.E().limit(1)', graph_options: options))
 
-puts '-- Change the graph alias on the session so that all future queries use it. --'
-session.graph_options.graph_alias = 'q'
-emit_result(session.execute_graph('q.E().limit(1)'))
+puts '-- Change the graph source on the session so that all future queries use it. --'
+session.graph_options.graph_source = 'a'
+emit_result(session.execute_graph('g.E().limit(1)'))
 
 puts '-- Use a Graph Statement object --'
-statement = Dse::Graph::Statement.new('m.E().limit(1)', nil, graph_options: options)
+statement = Dse::Graph::Statement.new('g.E().limit(1)', nil, graph_options: options)
 emit_result(session.execute_graph(statement))

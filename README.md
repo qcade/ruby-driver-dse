@@ -144,8 +144,9 @@ options.graph_name = 'mygraph'
 results = session.execute_graph('g.V().count()', graph_options: options)
 
 # Change the graph options on the session to alter subsequent query behavior.
-session.graph_options.graph_alias = 'm'
-results = session.execute_graph('m.V().count()')
+# Switch to the analytics source in this case.
+session.graph_options.graph_source = 'a'
+results = session.execute_graph('g.V().count()')
 
 # Create a statement object encapsulating a graph query, options, parameters,
 # for ease of reuse.
