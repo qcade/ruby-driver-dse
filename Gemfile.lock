@@ -1,6 +1,6 @@
 GIT
   remote: http://github.com/datastax/ruby-driver.git
-  revision: 70614782edd09c36e44580a36f6db83a5c0c014f
+  revision: 7352be35c4b09ac2a444c30dcb091f1c80ab91b7
   branch: 3.0.1
   specs:
     cassandra-driver (3.0.1)
