@@ -11,13 +11,13 @@ module Dse
   module LoadBalancing
     module Policies
       describe HostTargeting do
-        let (:base_policy) { double('base_policy') }
-        let (:statement) { double('statement') }
-        let (:host) {double('host')}
-        let (:host2) {double('host2')}
-        let (:base_plan) {double('base_plan')}
-        let (:cluster) {double('cluster')}
-        let (:policy) do
+        let(:base_policy) { double('base_policy') }
+        let(:statement) { double('statement') }
+        let(:host) {double('host')}
+        let(:host2) {double('host2')}
+        let(:base_plan) {double('base_plan')}
+        let(:cluster) {double('cluster')}
+        let(:policy) do
           policy = HostTargeting.new(base_policy)
           policy.setup(cluster)
           policy

@@ -11,15 +11,14 @@ module Dse
     module Providers
       describe GssApi do
         context :constructor do
-          let(:custom_resolver) {
+          let(:custom_resolver) do
             x = Object.new
-
             def x.resolve(host)
               'fake'
             end
-
             x
-          }
+          end
+
           it 'should default to a NameInfoResolver' do
             provider = GssApi.new('foo')
             expect(provider.instance_variable_get(:@host_resolver)).to be_instance_of(GssApi::NameInfoResolver)

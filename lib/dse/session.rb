@@ -4,7 +4,6 @@
 # Copyright 2013-2016 DataStax, Inc.
 #++
 
-
 module Dse
   # A session is used to execute queries. In addition to executing standard CQL queries
   # via the {http://datastax.github.io/ruby-driver/api/cassandra/session/#execute-instance_method #execute} and
@@ -59,17 +58,17 @@ module Dse
       options[:payload] = graph_options.as_payload
       options[:timeout] = DEFAULT_GRAPH_TIMEOUT unless options[:timeout]
 
-      if graph_options.is_analytics?
+      if graph_options.analytics?
         @cassandra_session.execute_async('CALL DseClientTool.getAnalyticsGraphServer()').then do |rows|
           row = rows.first
-          unless row.nil? || row['result'].nil?
-            ip = row['result']['ip']
-            targeted_statement = Dse::Statements::HostTargeting.new(graph_statement, ip)
-            @cassandra_session.execute_async(targeted_statement, options).then do |raw_result|
+          if row.nil? || row['result'].nil?
+            @cassandra_session.execute_async(graph_statement, options).then do |raw_result|
               Dse::Graph::ResultSet.new(raw_result)
             end
           else
-            @cassandra_session.execute_async(graph_statement, options).then do |raw_result|
+            ip = row['result']['ip']
+            targeted_statement = Dse::Statements::HostTargeting.new(graph_statement, ip)
+            @cassandra_session.execute_async(targeted_statement, options).then do |raw_result|
               Dse::Graph::ResultSet.new(raw_result)
             end
           end

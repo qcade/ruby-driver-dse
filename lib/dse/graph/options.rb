@@ -77,7 +77,7 @@ module Dse
       end
 
       # @return whether or not this options object is configured for the analytics graph source.
-      def is_analytics?
+      def analytics?
         @real_options[:graph_source] == 'a'
       end
 

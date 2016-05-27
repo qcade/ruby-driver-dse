@@ -17,7 +17,7 @@ module Dse
         # @private
         class NameInfoResolver
           def resolve(host)
-            Socket.getnameinfo(["AF_INET", 0, host])[0]
+            Socket.getnameinfo(['AF_INET', 0, host])[0]
           end
         end
 
@@ -48,31 +48,29 @@ module Dse
           def challenge_response(token)
             if token == 'GSSAPI-START'
               response = @gss_context.step('')[1]
-            else
+            elsif !@is_gss_complete
               # Process the challenge as a next step in authentication until we have gotten
               # AUTH_GSS_COMPLETE.
-              if !@is_gss_complete
-                rc, response = @gss_context.step(token)
-                @is_gss_complete = true if rc == AUTH_GSS_COMPLETE
-                response ||= ''
-              else
-                # Ok, we went through all initial phases of auth and now the server is giving us a message
-                # to decode.
-                data = @gss_context.unwrap(token)
+              rc, response = @gss_context.step(token)
+              @is_gss_complete = true if rc == AUTH_GSS_COMPLETE
+              response ||= ''
+            else
+              # Ok, we went through all initial phases of auth and now the server is giving us a message
+              # to decode.
+              data = @gss_context.unwrap(token)
 
-                raise 'Bad response from server' if data.length != 4
-                parsed = data.unpack('>L').first
-                max_length = [parsed & 0xffffff, 65536].min
+              raise 'Bad response from server' if data.length != 4
+              parsed = data.unpack('>L').first
+              max_length = [parsed & 0xffffff, 65536].min
 
-                # Set up a response like this:
-                # byte 0: the selected qop. 1==auth
-                # byte 1-3: the max length for any buffer sent back and forth on this connection. (big endian)
-                # the rest of the buffer: the authorization user name in UTF-8 - not null terminated.
+              # Set up a response like this:
+              # byte 0: the selected qop. 1==auth
+              # byte 1-3: the max length for any buffer sent back and forth on this connection. (big endian)
+              # the rest of the buffer: the authorization user name in UTF-8 - not null terminated.
 
-                user_name = @gss_context.user_name
-                out = [max_length | 1 << 24].pack('>L') + user_name
-                response = @gss_context.wrap(out)
-              end
+              user_name = @gss_context.user_name
+              out = [max_length | 1 << 24].pack('>L') + user_name
+              response = @gss_context.wrap(out)
             end
             response
           end
@@ -90,12 +88,12 @@ module Dse
         def initialize(service, host_resolver = true, principal = nil)
           @service = service
           @host_resolver = case host_resolver
-                             when false
-                               NoOpResolver.new
-                             when true
-                               NameInfoResolver.new
-                             else
-                               host_resolver
+                           when false
+                             NoOpResolver.new
+                           when true
+                             NameInfoResolver.new
+                           else
+                             host_resolver
                            end
           Cassandra::Util.assert_responds_to(:resolve, @host_resolver,
                                              'invalid host_resolver: it must have the :resolve method')
