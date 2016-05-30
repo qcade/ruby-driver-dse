@@ -10,5 +10,6 @@
 /.rvmrc
 /docs
 /.sass-cache
+/lib/*.bundle
 /venv
 /node_modules

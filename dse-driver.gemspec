@@ -21,6 +21,15 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 1.9.3'
 
+  if defined?(JRUBY_VERSION)
+    # s.platform = 'java'
+    # s.files << 'lib/cassandra_murmur3.jar'
+  else
+    s.platform = Gem::Platform::RUBY
+    s.extensions = 'ext/gss_api_context/extconf.rb'
+    s.files.concat(Dir['ext/gss_api_context/*'].reject { |item| item =~ /extconf.rb/ })
+  end
+
   s.add_runtime_dependency 'cassandra-driver', '~> 3.0.1'
 
   s.add_development_dependency 'bundler', '~> 1.6'

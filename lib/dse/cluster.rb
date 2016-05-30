@@ -25,7 +25,8 @@ module Dse
                    retry_policy,
                    address_resolution_policy,
                    connector,
-                   futures_factory)
+                   futures_factory,
+                   timestamp_generator)
       @delegate_cluster = Cassandra::Cluster.new(logger,
                                                  io_reactor,
                                                  executor,
@@ -40,7 +41,9 @@ module Dse
                                                  retry_policy,
                                                  address_resolution_policy,
                                                  connector,
-                                                 futures_factory)
+                                                 futures_factory,
+                                                 timestamp_generator)
+
       # We need the futures factory ourselves for async error reporting and potentially for our
       # own async processing independent of the C* driver.
       @futures = futures_factory

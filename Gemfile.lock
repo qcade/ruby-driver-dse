@@ -1,7 +1,7 @@
 GIT
   remote: http://github.com/datastax/ruby-driver.git
-  revision: 70614782edd09c36e44580a36f6db83a5c0c014f
-  branch: 3.0.1
+  revision: a520f40c2fc5c1d66ad70ecb55eb37eccadc6a38
+  branch: master
   specs:
     cassandra-driver (3.0.1)
       ione (~> 1.2)
@@ -100,7 +100,7 @@ DEPENDENCIES
   ansi
   aruba
   bundler (~> 1.6)
-  cassandra-driver (= 3.0.1)!
+  cassandra-driver (~> 3.0.1)!
   cliver
   cucumber
   dse-driver!

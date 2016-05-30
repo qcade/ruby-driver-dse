@@ -19,16 +19,17 @@ module Dse
         expected_graph_statement = Dse::Graph::Statement.new('g.V()', nil, session.graph_options)
         expect(cassandra_session).to receive(:execute_async)
           .with(expected_graph_statement, timeout: 32,
-                payload: { 'graph-source' => 'g', 'graph-language' => 'gremlin-groovy' }).and_return(future)
+                                          payload: { 'graph-source' => 'g', 'graph-language' => 'gremlin-groovy' })
+          .and_return(future)
         expect(future).to receive(:then)
         session.execute_graph_async('g.V()')
       end
 
       it 'should succeed with query parameters' do
-        expected_graph_statement = Dse::Graph::Statement.new('g.V().limit(n)', {n: 2}, session.graph_options)
+        expected_graph_statement = Dse::Graph::Statement.new('g.V().limit(n)', { n: 2 }, session.graph_options)
         expect(cassandra_session).to receive(:execute_async)
           .with(expected_graph_statement, arguments: { n: 2 }, timeout: 32,
-                                  payload: { 'graph-source' => 'g', 'graph-language' => 'gremlin-groovy' })
+                                          payload: { 'graph-source' => 'g', 'graph-language' => 'gremlin-groovy' })
           .and_return(future)
         expect(future).to receive(:then)
         session.execute_graph_async('g.V().limit(n)', arguments: { n: 2 })
@@ -40,13 +41,13 @@ module Dse
       end
 
       it 'should accept graph options hash' do
-        execution_options = {graph_source: 'other', graph_name: 'myg', random: 'junk'}
+        execution_options = { graph_source: 'other', graph_name: 'myg', random: 'junk' }
         expected_graph_statement = Dse::Graph::Statement.new('g.V()', nil, Dse::Graph::Options.new(execution_options))
         expect(cassandra_session).to receive(:execute_async)
           .with(expected_graph_statement,
                 execution_options.merge(
-                payload: { 'graph-source' => 'other', 'graph-language' => 'gremlin-groovy', 'graph-name' => 'myg' },
-                timeout: 32))
+                  payload: { 'graph-source' => 'other', 'graph-language' => 'gremlin-groovy', 'graph-name' => 'myg' },
+                  timeout: 32))
           .and_return(future)
         expect(future).to receive(:then)
         options = Dse::Graph::Options.new
@@ -62,9 +63,9 @@ module Dse
         expected_graph_statement = Dse::Graph::Statement.new('g.V()', nil, options)
         expect(cassandra_session).to receive(:execute_async)
           .with(expected_graph_statement, graph_options: options, timeout: 32,
-                                  payload: { 'graph-source' => 'other',
-                                             'graph-language' => 'gremlin-groovy',
-                                             'graph-name' => 'myg' })
+                                          payload: { 'graph-source' => 'other',
+                                                     'graph-language' => 'gremlin-groovy',
+                                                     'graph-name' => 'myg' })
           .and_return(future)
         expect(future).to receive(:then)
         session.execute_graph_async('g.V()', graph_options: options)

@@ -5,6 +5,7 @@
 #++
 
 require 'json'
+require 'gss_api_context'
 require 'cassandra'
 
 module Dse
@@ -58,3 +59,4 @@ require 'dse/version'
 require 'dse/graph'
 require 'dse/load_balancing/policies/host_targeting'
 require 'dse/statements'
+require 'dse/auth/providers/gss_api'

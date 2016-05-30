@@ -23,9 +23,7 @@ module Dse
           end
 
           def has_next?
-            if @first && !@targeted_host.nil? && @targeted_host.up?
-              @next = @targeted_host
-            end
+            @next = @targeted_host if @first && !@targeted_host.nil? && @targeted_host.up?
             @first = false
             return true if @next
 
@@ -91,15 +89,11 @@ module Dse
         end
 
         def plan(keyspace, statement, options)
-          if statement.is_a?(Dse::Statements::HostTargeting)
-            Plan.new(@cluster.host(statement.target_ip), @base_policy, keyspace, statement, options)
-          else
-            # Fall back to creating a plan from the base policy if the statement is not host-targeting.
-            return @base_policy.plan(keyspace, statement, options)
-          end
+          # Fall back to creating a plan from the base policy if the statement is not host-targeting.
+          return @base_policy.plan(keyspace, statement, options) unless statement.is_a?(Dse::Statements::HostTargeting)
+          Plan.new(@cluster.host(statement.target_ip), @base_policy, keyspace, statement, options)
         end
       end
     end
   end
 end
-
