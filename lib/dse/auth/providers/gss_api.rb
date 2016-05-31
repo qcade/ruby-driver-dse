@@ -33,7 +33,8 @@ module Dse
           # Copied from kerberosgss.h
           AUTH_GSS_COMPLETE = 1
 
-          def initialize(host, service, principal)
+          def initialize(authentication_class, host, service, principal)
+            @authentication_class = authentication_class
             @host = host
             @service = service
             @principal = principal
@@ -42,7 +43,9 @@ module Dse
           end
 
           def initial_response
-            'GSSAPI'
+            @authentication_class == 'com.datastax.bdp.cassandra.auth.DseAuthenticator' ?
+                'GSSAPI' :
+                challenge_response('GSSAPI-START')
           end
 
           def challenge_response(token)
@@ -102,7 +105,7 @@ module Dse
 
         # @private
         def create_authenticator(authentication_class, host)
-          Authenticator.new(@host_resolver.resolve(host.ip.to_s), @service, @principal)
+          Authenticator.new(authentication_class, @host_resolver.resolve(host.ip.to_s), @service, @principal)
         end
       end
     end
