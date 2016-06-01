@@ -522,13 +522,6 @@ class GraphTest < IntegrationTestCase
     assert_equal 'value', vertex.properties['single_key'][0].value
     @@session.execute_graph("g.V().has('namings', 'single_key', 'value').drop()")
 
-    # Multiple values in single-value property
-    @@session.execute_graph("graph.addVertex(label, 'namings', 'single_key', 'value0', 'single_key', 'value1')")
-    vertex = @@session.execute_graph("g.V().has('namings', 'single_key', 'value1')").first
-    assert_equal 1, vertex.properties['single_key'].size
-    assert_equal 'value1', vertex.properties['single_key'][0].value
-    @@session.execute_graph("g.V().has('namings', 'single_key', 'value1').drop()")
-
     # Properties by default are single-value
     @@session.execute_graph("graph.addVertex(label, 'person', 'name', 'john', 'name', 'doe')")
     vertex = @@session.execute_graph("g.V().has('person', 'name', 'doe')").first
