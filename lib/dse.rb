@@ -35,9 +35,15 @@ module Dse
   # @return [Cassandra::Future<Dse::Cluster>] a future resolving to the
   #   cluster instance.
   def self.cluster_async(options = {})
+    username = options[:username]
+    password = options[:password]
     options, hosts = Cassandra.validate_and_massage_options(options)
+
+    # Use the DSE plain text authenticator if we have a username and password. The above validation already
+    # raises an error if one is given without the other.
+    options[:auth_provider] = Auth::Providers::Password.new(username, password) if username && password
   rescue => e
-    futures = options.fetch(:futures_factory) { return Future::Error.new(e) }
+    futures = options.fetch(:futures_factory) { return Cassandra::Future::Error.new(e) }
     futures.error(e)
   else
     options[:cluster_klass] = Dse::Cluster
@@ -60,3 +66,4 @@ require 'dse/graph'
 require 'dse/load_balancing/policies/host_targeting'
 require 'dse/statements'
 require 'dse/auth/providers/gss_api'
+require 'dse/auth/providers/password'
