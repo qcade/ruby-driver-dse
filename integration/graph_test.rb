@@ -521,13 +521,6 @@ class GraphTest < IntegrationTestCase
     assert_equal 1, vertex.properties['single_key'].size
     assert_equal 'value', vertex.properties['single_key'][0].value
     @@session.execute_graph("g.V().has('namings', 'single_key', 'value').drop()")
-
-    # Properties by default are single-value
-    @@session.execute_graph("graph.addVertex(label, 'person', 'name', 'john', 'name', 'doe')")
-    vertex = @@session.execute_graph("g.V().has('person', 'name', 'doe')").first
-    assert_equal 1, vertex.properties['name'].size
-    assert_equal 'doe', vertex.properties['name'][0].value
-    @@session.execute_graph("g.V().has('person', 'name', 'doe').drop()")
   end
 
   # Test for retrieving vertex property properties metadata
