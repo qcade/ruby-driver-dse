@@ -758,7 +758,7 @@ module CCM extend self
         end
 
         rows.each do |row|
-          next if row['keyspace_name'].start_with?('system')
+          next if row['keyspace_name'].start_with?('system') || row['keyspace_name'].start_with?('dse')
           @session.execute("DROP KEYSPACE #{row['keyspace_name']}")
         end
 

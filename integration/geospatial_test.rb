@@ -5,17 +5,14 @@
 #++
 
 require File.dirname(__FILE__) + '/integration_test_case.rb'
-require 'set'
+include Dse::Geometry
 
 class GeospatialTest < IntegrationTestCase
-  include Dse::Geometry
-
   def self.before_suite
     if CCM.dse_version < '5.0.0'
       puts 'DSE > 5.0 required for geospatial tests, skipping setup.'
     else
       super
-
       @@cluster = Dse.cluster
       @@session = @@cluster.connect
 
