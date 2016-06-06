@@ -14,7 +14,7 @@ class GeospatialTest < IntegrationTestCase
     if CCM.dse_version < '5.0.0'
       puts 'DSE > 5.0 required for geospatial tests, skipping setup.'
     else
-      @@ccm_cluster = CCM.setup_cluster(1, 1)
+      super
 
       @@cluster = Dse.cluster
       @@session = @@cluster.connect
