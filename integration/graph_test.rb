@@ -2,18 +2,6 @@
 
 #--
 # Copyright 2013-2016 DataStax, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 #++
 
 require File.dirname(__FILE__) + '/integration_test_case.rb'
@@ -22,17 +10,17 @@ require 'set'
 class GraphTest < IntegrationTestCase
   def self.before_suite
     if CCM.dse_version < '5.0.0'
-      puts "DSE > 5.0 required for graph tests, skipping setup."
+      puts 'DSE > 5.0 required for graph tests, skipping setup.'
     else
       @@ccm_cluster = CCM.setup_graph_cluster(1, 3)
 
       @@cluster = Dse.cluster(timeout: 32)
       @@session = @@cluster.connect
 
-      self.remove_graph(@@session, 'users')
-      self.remove_graph(@@session, 'test')
-      self.create_graph(@@session, 'users')
-      self.create_graph(@@session, 'test')
+      remove_graph(@@session, 'users')
+      remove_graph(@@session, 'test')
+      create_graph(@@session, 'users')
+      create_graph(@@session, 'test')
       @@session.graph_options.graph_name = 'users'
 
       @@ccm_cluster.setup_graph_schema(<<-GRAPH, 'users')
@@ -379,7 +367,7 @@ class GraphTest < IntegrationTestCase
     assert_equal 1, @@session.execute_graph(graph_statement).size
 
     graph_query = 'g.V()'
-    graph_options = Dse::Graph::Options.new({graph_name: 'users', graph_language: 'gremlin-groovy'})
+    graph_options = Dse::Graph::Options.new(graph_name: 'users', graph_language: 'gremlin-groovy')
     graph_statement = Dse::Graph::Statement.new(graph_query, nil, options = graph_options)
     assert_nil graph_statement.parameters
     refute_nil graph_statement.options
@@ -544,8 +532,8 @@ class GraphTest < IntegrationTestCase
     @@session.execute_graph("yoda = graph.addVertex(label, 'master', 'name', 'Yoda');
                              yoda.property('origin', 'unknown', 'country', 'Galactic Republic', 'descent', 'Jedi')")
 
-    vertex =  @@session.execute_graph("g.V().has('master', 'name', 'Yoda')").first
-    meta_properties = ['origin', {"country" => "Galactic Republic", "descent" => "Jedi"}]
+    vertex = @@session.execute_graph("g.V().has('master', 'name', 'Yoda')").first
+    meta_properties = ['origin', {'country' => 'Galactic Republic', 'descent' => 'Jedi'}]
     validate_vertex(vertex, 'master', ['name', 'origin'], ['Yoda', 'unknown'], meta_properties)
 
     @@session.execute_graph("g.V().has('master', 'name', 'Yoda').drop()")
@@ -574,7 +562,7 @@ class GraphTest < IntegrationTestCase
                              yoda.property('multi_origin', 'unknown0', 'country', 'Galactic Republic');
                              yoda.property('multi_origin', 'unknown1', 'country', 'Jedi Order')")
 
-    vertex =  @@session.execute_graph("g.V().has('multi_master', 'name', 'Yoda')").first
+    vertex = @@session.execute_graph("g.V().has('multi_master', 'name', 'Yoda')").first
     assert_equal 2, vertex.properties['multi_origin'].size
 
     property_one = vertex.properties['multi_origin'][0]
@@ -628,22 +616,22 @@ class GraphTest < IntegrationTestCase
   def test_can_retrieve_simple_edge_metadata
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
-    labels = ['created', 'created', 'knows' , 'knows', 'created', 'created']
-    in_v = [['software', {"~label"=>"software", "member_id"=>1}],
-            ['software', {"~label"=>"software", "member_id"=>1}],
-            ['person', {"~label"=>"person", "member_id"=>3}],
-            ['person', {"~label"=>"person", "member_id"=>4}],
-            ['software', {"~label"=>"software", "member_id"=>1}],
-            ['software', {"~label"=>"software", "member_id"=>5}]
+    labels = %w(created created knows knows created created)
+    in_v = [['software', {'~label' => 'software', 'member_id' => 1}],
+            ['software', {'~label' => 'software', 'member_id' => 1}],
+            ['person', {'~label' => 'person', 'member_id' => 3}],
+            ['person', {'~label' => 'person', 'member_id' => 4}],
+            ['software', {'~label' => 'software', 'member_id' => 1}],
+            ['software', {'~label' => 'software', 'member_id' => 5}]
     ]
-    out_v = [['person', {"~label"=>"person", "member_id"=>0}],
-             ['person', {"~label"=>"person", "member_id"=>2}],
-             ['person', {"~label"=>"person", "member_id"=>2}],
-             ['person', {"~label"=>"person", "member_id"=>2}],
-             ['person', {"~label"=>"person", "member_id"=>4}],
-             ['person', {"~label"=>"person", "member_id"=>4}]
+    out_v = [['person', {'~label' => 'person', 'member_id' => 0}],
+             ['person', {'~label' => 'person', 'member_id' => 2}],
+             ['person', {'~label' => 'person', 'member_id' => 2}],
+             ['person', {'~label' => 'person', 'member_id' => 2}],
+             ['person', {'~label' => 'person', 'member_id' => 4}],
+             ['person', {'~label' => 'person', 'member_id' => 4}]
     ]
-    properties = [{"weight"=>0.2}, {"weight"=>0.4}, {"weight"=>0.5}, {"weight"=>1.0}, {"weight"=>0.4}, {"weight"=>1.0}]
+    properties = [{'weight' => 0.2}, {'weight' => 0.4}, {'weight' => 0.5}, {'weight' => 1.0}, {'weight' => 0.4}, {'weight' => 1.0}]
 
     results = @@session.execute_graph('g.E()')
     assert_equal 6, results.size
@@ -669,13 +657,13 @@ class GraphTest < IntegrationTestCase
   def test_can_retrieve_path_metadata
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
-    results = @@session.execute_graph("g.V().hasLabel('person').has('name', 'marko').as('a')" +
+    results = @@session.execute_graph("g.V().hasLabel('person').has('name', 'marko').as('a')" \
                                   ".outE('knows').inV().as('c', 'd').outE('created').as('e', 'f', 'g').inV().path()")
     assert_equal 2, results.size
 
     first_path = results[0].as_path
     assert_instance_of(Dse::Graph::Path, first_path)
-    assert_equal [["a"], [], ["c", "d"], ["e", "f", "g"], []], first_path.labels
+    assert_equal [['a'], [], ['c', 'd'], ['e', 'f', 'g'], []], first_path.labels
 
     path_objects = first_path.objects
     assert_equal 5, path_objects.size
@@ -689,7 +677,7 @@ class GraphTest < IntegrationTestCase
 
     second_path = results[1].as_path
     assert_instance_of(Dse::Graph::Path, second_path)
-    assert_equal [["a"], [], ["c", "d"], ["e", "f", "g"], []], second_path.labels
+    assert_equal [['a'], [], ['c', 'd'], ['e', 'f', 'g'], []], second_path.labels
 
     path_objects = second_path.objects
     assert_equal 5, path_objects.size
@@ -719,7 +707,7 @@ class GraphTest < IntegrationTestCase
   def test_raise_error_on_casting
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
-    result = @@session.execute_graph("g.V().count()").first
+    result = @@session.execute_graph('g.V().count()').first
 
     assert_raises(ArgumentError) do
       result.as_vertex
@@ -733,5 +721,4 @@ class GraphTest < IntegrationTestCase
       result.as_path
     end
   end
-
 end

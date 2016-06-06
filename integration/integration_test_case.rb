@@ -35,7 +35,7 @@ class IntegrationTestCase < MiniTest::Unit::TestCase
   end
 
   def before_setup
-    puts ANSI::Code.magenta("\n===== Begin #{self.__name__} ====")
+    puts ANSI::Code.magenta("\n===== Begin #{__name__} ====")
   end
 
   def assert_columns(expected_names_and_types, actual_columns)
@@ -56,21 +56,17 @@ class IntegrationUnit < MiniTest::Unit
   end
 
   def _run_suites(suites, type)
-    begin
-      before_suites
-      super(suites, type)
-    ensure
-      after_suites
-    end
+    before_suites
+    super(suites, type)
+  ensure
+    after_suites
   end
 
   def _run_suite(suite, type)
-    begin
-      suite.before_suite if suite.respond_to?(:before_suite)
-      super(suite, type)
-    ensure
-      suite.after_suite if suite.respond_to?(:after_suite)
-    end
+    suite.before_suite if suite.respond_to?(:before_suite)
+    super(suite, type)
+  ensure
+    suite.after_suite if suite.respond_to?(:after_suite)
   end
 end
 

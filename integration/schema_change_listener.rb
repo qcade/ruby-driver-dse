@@ -24,7 +24,7 @@ class SchemaChangeListener
   def wait_for_change(keyspace_name, timeout = nil, &block)
     # First run the block and see if it succeeds; if so, there's nothing
     # to wait for.
-    result = block.call(@cluster.keyspace(keyspace_name))
+    result = yield(@cluster.keyspace(keyspace_name))
     return result if result
 
     # Ok, looks like we do need to wait...
@@ -40,7 +40,6 @@ class SchemaChangeListener
       @conditions[keyspace_name].reject! { |c| c.promise == promise }
     end
   end
-
 
   def wait_for_function(keyspace_name, function_name, *args)
     wait_for_change(keyspace_name, 2) do |ks|
@@ -61,7 +60,7 @@ class SchemaChangeListener
   end
 
   def wait_for_index(keyspace_name, table_name, index_name, *args)
-    self.wait_for_table(keyspace_name, table_name)
+    wait_for_table(keyspace_name, table_name)
     wait_for_change(keyspace_name, 2) do |ks|
       ks.table(table_name).has_index?(index_name, *args)
     end
@@ -81,4 +80,3 @@ class SchemaChangeListener
     nil
   end
 end
-
