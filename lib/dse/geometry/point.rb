@@ -21,8 +21,8 @@ module Dse
       # @param x [Float] the x coordinate of the point.
       # @param y [Float] the y coordinate of the point.
       def initialize(x, y)
-        Cassandra::Util.assert_responds_to(:to_f, x)
-        Cassandra::Util.assert_responds_to(:to_f, y)
+        Cassandra::Util.assert_instance_of(::Numeric, x)
+        Cassandra::Util.assert_instance_of(::Numeric, y)
         @x = x.to_f
         @y = y.to_f
       end

@@ -30,6 +30,23 @@ module Dse
           expect do
             Point.new(fake_float, 1)
           end.to raise_error(ArgumentError)
+
+          # We specifically don't want to accept string or nil.
+          expect do
+            Point.new('abc', 1)
+          end.to raise_error(ArgumentError)
+
+          expect do
+            Point.new(1, 'abc')
+          end.to raise_error(ArgumentError)
+
+          expect do
+            Point.new(nil, 1)
+          end.to raise_error(ArgumentError)
+
+          expect do
+            Point.new(1, nil)
+          end.to raise_error(ArgumentError)
         end
       end
 
