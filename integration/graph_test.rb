@@ -7,6 +7,8 @@
 require File.dirname(__FILE__) + '/integration_test_case.rb'
 require 'set'
 
+include Dse::Geometry
+
 class GraphTest < IntegrationTestCase
   def self.before_suite
     if CCM.dse_version < '5.0.0'
@@ -60,6 +62,13 @@ class GraphTest < IntegrationTestCase
       schema.vertexLabel('master').properties('name', 'origin').ifNotExists().create();
       schema.propertyKey('multi_origin').Text().multiple().properties('country').ifNotExists().create();
       schema.vertexLabel('multi_master').properties('name', 'multi_origin').ifNotExists().create();
+      GRAPH
+
+      @@ccm_cluster.setup_graph_schema(<<-GRAPH, 'users')
+      schema.propertyKey('loc').Point().ifNotExists().create();
+      schema.propertyKey('path').Linestring().ifNotExists().create();
+      schema.propertyKey('region').Polygon().ifNotExists().create();
+      schema.vertexLabel('geo').properties('loc', 'path', 'region').ifNotExists().create();
       GRAPH
 
       # Adding a sleep here to allow for schema to propagate to all graph nodes
@@ -183,7 +192,7 @@ class GraphTest < IntegrationTestCase
     session = @@cluster.connect(graph_name: 'users')
 
     assert_equal 'users', session.graph_name
-    assert_equal 6, session.execute_graph('g.V().count()').first.value
+    assert(session.execute_graph('g.V().count()').first.value > 0)
 
     session.graph_options.graph_name = 'test'
     assert_equal 'test', session.graph_name
@@ -466,6 +475,55 @@ class GraphTest < IntegrationTestCase
     results.each_with_index do |v, i|
       validate_vertex(v, labels[i], property_names[i], property_values[i])
     end
+  end
+
+  # Test for creating and retrieving a vertex with geospatial type properties.
+  #
+  # test_create_vertex_with_geospatial_properties tests that a vertex with point, linestring, and polygon
+  # properties can be created and retrieved.
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-197
+  # @expected_result The new vertex should be created and retrieved.
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_create_vertex_with_geospatial_properties
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    session = @@cluster.connect(graph_name: 'users')
+
+    # Create the geo type instances we want to pass as params.
+    point = Point.new(98, 3)
+    line = LineString.new([
+                              Dse::Geometry::Point.new(2, 5),
+                              Dse::Geometry::Point.new(5, 2)
+                          ])
+    poly = Polygon.new([
+                           LineString.new([
+                                              Point.new(0, 0),
+                                              Point.new(20, 0),
+                                              Point.new(26, 26),
+                                              Point.new(0, 26),
+                                              Point.new(0, 0)
+                                          ]),
+                           LineString.new([
+                                              Point.new(1, 1),
+                                              Point.new(1, 5),
+                                              Point.new(5, 5),
+                                              Point.new(5, 1),
+                                              Point.new(1, 1)
+                                          ])
+                       ])
+
+    # Create the vertex.
+    vertex = session.execute_graph("graph.addVertex(label, 'geo', 'loc', myloc, 'path', mypath, 'region', myregion)",
+                                   arguments: { myloc: point, mypath: line, myregion: poly }).first
+    session.execute_graph("g.V().hasLabel('geo').drop()")
+    assert_equal('POINT (98 3)', vertex['loc'].first.value)
+    assert_equal('LINESTRING (2 5, 5 2)', vertex['path'].first.value)
+    assert_equal('POLYGON ((0 0, 20 0, 26 26, 0 26, 0 0), (1 1, 1 5, 5 5, 5 1, 1 1))', vertex['region'].first.value)
   end
 
   # Test for retrieving multi-value vertex property metadata

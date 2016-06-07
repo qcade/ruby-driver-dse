@@ -34,7 +34,13 @@ module Dse
         # send to DSE over the wire. But if we have no params, nil is fine.
         unless parameters.nil?
           ::Cassandra::Util.assert_instance_of(::Hash, parameters, 'Graph parameters must be a hash')
-          parameters = [parameters.to_json]
+          # Some of our parameters may be geo-type values. Convert them to their wkt representation.
+          tweaked_params = {}
+          parameters.each do |name, value|
+            value = value.wkt if value.respond_to?(:wkt)
+            tweaked_params[name] = value
+          end
+          parameters = [tweaked_params.to_json]
         end
 
         # Graph options may be tricky. A few cases:
