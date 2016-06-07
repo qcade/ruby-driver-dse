@@ -44,18 +44,18 @@ class AuthenticationTest < IntegrationTestCase
   # @since 1.0.0
   # @jira_ticket RUBY-169
   # @expected_result Username and password should successfully authenticate to the Dse cluster.
-  # 
+  #
   # @test_assumptions Authentication-enabled Dse cluster via DseAuthenticator.
   # @test_category authentication
   #
   def test_can_authenticate_via_dse_authenticator
-    skip("DseAuthenticator is only available in DSE after 5.0") if CCM.dse_version < '5.0.0'
+    skip('DseAuthenticator is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
     begin
       cluster = Dse.cluster(
-                  username: @@username,
-                  password: @@password
-                )
+        username: @@username,
+        password: @@password
+      )
 
       refute_nil cluster
     ensure

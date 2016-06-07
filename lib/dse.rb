@@ -37,6 +37,8 @@ module Dse
   def self.cluster_async(options = {})
     username = options[:username]
     password = options[:password]
+    options[:custom_types] ||= []
+    options[:custom_types] << Dse::Geometry::Point << Dse::Geometry::LineString << Dse::Geometry::Polygon
     options, hosts = Cassandra.validate_and_massage_options(options)
 
     # Use the DSE plain text authenticator if we have a username and password. The above validation already
@@ -60,6 +62,10 @@ module Dse
 end
 
 require 'dse/cluster'
+require 'dse/util/endian_buffer'
+require 'dse/geometry/line_string'
+require 'dse/geometry/point'
+require 'dse/geometry/polygon'
 require 'dse/session'
 require 'dse/version'
 require 'dse/graph'
