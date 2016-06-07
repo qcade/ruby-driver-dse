@@ -12,6 +12,27 @@ module Dse
     describe Point do
       let(:point) {Point.new(37.5, 21.1)}
 
+      context :constructor do
+        let(:fake_float) {double('fake_float')}
+
+        it 'should handle float-like args' do
+          expect(fake_float).to receive(:to_f).and_return(99.5)
+          p = Point.new(1, fake_float)
+          expect(p.x).to eq(1.0)
+          expect(p.y).to eq(99.5)
+        end
+
+        it 'should error out if args are not float-able' do
+          expect do
+            Point.new(1, fake_float)
+          end.to raise_error(ArgumentError)
+
+          expect do
+            Point.new(fake_float, 1)
+          end.to raise_error(ArgumentError)
+        end
+      end
+
       it 'wkt should work' do
         expect(point.wkt).to eq('POINT (37.5 21.1)')
       end
