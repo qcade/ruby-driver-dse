@@ -100,7 +100,7 @@ DEPENDENCIES
   ansi
   aruba
   bundler (~> 1.6)
-  cassandra-driver (~> 3.0.1)!
+  cassandra-driver (= 3.0.1)!
   cliver
   cucumber
   dse-driver!

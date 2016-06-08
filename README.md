@@ -2,9 +2,20 @@
 
 This driver exposes the following features of DSE 5.0:
 
-* Graph
-* Geospatial types
-* Kerberos authentication with nodes
+* <a href="#graph">Graph</a>
+* <a href="#kerberos-authentication">Kerberos authentication</a> with nodes
+* <a href="#geospatial-types">Geospatial types</a>
+
+The driver depends heavily on a particular version of the core [Cassandra driver](https://rubygems.org/gems/cassandra-driver).
+Within a script or irb, you can determine the exact versions of the dse and core drivers by accessing the VERSION
+constant of the appropriate module:
+
+```ruby
+require 'dse'
+
+puts "Dse Driver Version: #{Dse::VERSION}"
+puts "Cassandra Driver Version: #{Cassandra::VERSION}"
+```
 
 ## Graph
 Executing graph statements is similar to issuing CQL queries in the Cassandra
