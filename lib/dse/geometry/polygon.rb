@@ -23,9 +23,11 @@ module Dse
       LINESTRING_SEPARATOR_RE = /\s*\)(,\s*)?/
 
       # @param args [Array<LineString>,Array<String>] varargs-style arguments in two forms:
-      #   <ul><li>an ordered collection of linear-rings that make up this polygon. Can be empty.</li>
+      #   <ul><li>ordered collection of linear-rings that make up this polygon. Can be empty.</li>
       #       <li>one-element string array with the wkt representation.</li></ul>
       #
+      # @example Construct an empty Polygon
+      #   polygon = Polygon.new
       # @example Construct a Polygon with LineString objects.
       #   exterior_ring = LineString.new(Point.new(0, 0), Point.new(10, 0), Point.new(10, 10), Point.new(0, 0))
       #   interior_ring = LineString.new(Point.new(1, 1), Point.new(1, 5), Point.new(5, 1), Point.new(1, 1))

@@ -23,7 +23,7 @@ module Dse
       POINT_SPEC_RE = /^([0-9\-\.]+) ([0-9\-\.]+)$/
 
       # @param args [Array<Numeric>,Array<String>] varargs-style arguments in two forms:
-      #   <ul><li>a two-element numeric array representing x,y coordinates.</li>
+      #   <ul><li>two-element numeric array representing x,y coordinates.</li>
       #       <li>one-element string array with the wkt representation.</li></ul>
       #
       # @example Construct a Point with numeric arguments.

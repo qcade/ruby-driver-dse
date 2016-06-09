@@ -21,17 +21,19 @@ module Dse
       POINT_SEPARATOR_RE = /\s*,\s*/
 
       # @param args [Array<Point>,Array<String>] varargs-style arguments in two forms:
-      #   <ul><li>an ordered collection of points that make up this line-string.
+      #   <ul><li>ordered collection of points that make up this line-string.
       #           Must be empty or have at least two points.</li>
       #       <li>one-element string array with the wkt representation.</li></ul>
       #
+      # @example Construct an empty LineString
+      #   line = LineString.new
       # @example Construct a LineString with Point objects.
       #   line = LineString.new(Point.new(1.0, 2.0), Point.new(3.0, 4.0))
       # @example Construct a LineString with a wkt string.
       #   line = LineString.new('LINESTRING (1.0 2.0, 3.0 4.0)')
       def initialize(*args)
         # The constructor has two forms:
-        # 1. array (possibly empty) of Point objects.
+        # 1. 0, 2, or more Point objects in the order in which one connects them to make a line-string.
         # 2. one String arg as the wkt representation.
 
         if args.size == 1
