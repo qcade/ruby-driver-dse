@@ -39,11 +39,9 @@ puts "\n==== LineString ====\n"
 # connect the dots to get the line-string!
 session.execute("CREATE TABLE IF NOT EXISTS directions (origin text PRIMARY KEY, destination text, directions 'LineStringType')")
 session.execute('INSERT INTO directions (origin, destination, directions) VALUES (?, ?, ?)',
-                arguments: ['office', 'home', LineString.new([
-                                                                 Point.new(12.0, 21.0),
-                                                                 Point.new(13.0, 31.0),
-                                                                 Point.new(14.0, 41.0)
-                                                             ])])
+                arguments: ['office', 'home', LineString.new(Point.new(12.0, 21.0),
+                                                             Point.new(13.0, 31.0),
+                                                             Point.new(14.0, 41.0))])
 # Now retrieve the line-string.
 rs = session.execute('SELECT * FROM directions')
 rs.each do |row|
@@ -69,22 +67,16 @@ puts "\n==== Polygon ====\n"
 
 session.execute("CREATE TABLE IF NOT EXISTS places (name text PRIMARY KEY, layout 'PolygonType')")
 session.execute('INSERT INTO places (name, layout) VALUES (?, ?)',
-                arguments: ['Capitol', Polygon.new([
-                                                       LineString.new([
-                                                                          Point.new(0, 0),
-                                                                          Point.new(20, 0),
-                                                                          Point.new(26, 26),
-                                                                          Point.new(0, 26),
-                                                                          Point.new(0, 0)
-                                                                      ]),
-                                                       LineString.new([
-                                                                          Point.new(1, 1),
-                                                                          Point.new(1, 5),
-                                                                          Point.new(5, 5),
-                                                                          Point.new(5, 1),
-                                                                          Point.new(1, 1)
-                                                                      ])
-                                                   ])])
+                arguments: ['Capitol', Polygon.new(LineString.new(Point.new(0, 0),
+                                                                  Point.new(20, 0),
+                                                                  Point.new(26, 26),
+                                                                  Point.new(0, 26),
+                                                                  Point.new(0, 0)),
+                                                   LineString.new(Point.new(1, 1),
+                                                                  Point.new(1, 5),
+                                                                  Point.new(5, 5),
+                                                                  Point.new(5, 1),
+                                                                  Point.new(1, 1)))])
 # Now retrieve the polygon
 rs = session.execute('SELECT * FROM places')
 rs.each do |row|

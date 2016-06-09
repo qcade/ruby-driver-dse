@@ -16,9 +16,30 @@ module Dse
       # @return [Array<Point>] collection of points that make up this line-string.
       attr_reader :points
 
-      # @param points [Array<Point>] collection of points that make up this line-string.
-      def initialize(points)
-        @points = points
+      # @param args [Array<Point>,Array<String>] varargs-style arguments in two forms:
+      #   <ul><li>an ordered collection of points that make up this line-string.
+      #           Must be empty or have at least two points.</li>
+      #       <li>one-element string array with the wkt representation.</li></ul>
+      #
+      # @example Construct a LineString with Point objects.
+      #   line = LineString.new(Point.new(1.0, 2.0), Point.new(3.0, 4.0))
+      # @example Construct a LineString with a wkt string.
+      #   line = LineString.new('LINESTRING (1.0 2.0, 3.0 4.0)')
+      def initialize(*args)
+        # The constructor has two forms:
+        # 1. array (possibly empty) of Point objects.
+        # 2. one String arg as the wkt representation.
+
+        if args.size == 1
+          wkt = args.first
+          Cassandra::Util.assert_instance_of(String, wkt)
+
+          raise NotImplementError, 'wkt processing not yet implemented'
+        end
+        @points = args.freeze
+        @points.each do |p|
+          Cassandra::Util.assert_instance_of(Point, p, "#{p.inspect} is not a Point")
+        end
       end
 
       # @return [String] well-known-text representation of this line-string.
@@ -95,7 +116,7 @@ module Dse
         num_points.times do
           points << Point.deserialize_raw(buffer)
         end
-        LineString.new(points)
+        LineString.new(*points)
       end
 
       # Serialize this domain object into a byte array to send to DSE.

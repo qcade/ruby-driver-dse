@@ -82,11 +82,7 @@ class GeospatialTest < IntegrationTestCase
   def test_good_line_string
     skip('Geospatial types are only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
-    test_line_string = LineString.new([
-                                        Point.new(1.0, 2.0),
-                                        Point.new(2.0, 4.0),
-                                        Point.new(3.0, 6.0)
-                                      ])
+    test_line_string = LineString.new(Point.new(1.0, 2.0), Point.new(2.0, 4.0), Point.new(3.0, 6.0))
     @@session.execute('INSERT INTO simplex.line_strings (name, line_string) VALUES (?, ?)',
                       arguments: ['test', test_line_string])
     rs = @@session.execute('SELECT * FROM simplex.line_strings')
@@ -96,13 +92,8 @@ class GeospatialTest < IntegrationTestCase
     end
     assert_equal(2, rows.size)
     assert_equal(test_line_string, rows['test'])
-    assert_equal(
-      LineString.new([
-                       Point.new(3.0, 2.0),
-                       Point.new(4.0, 3.0),
-                       Point.new(5.0, 4.0)
-                     ]),
-      rows['baseline'])
+    assert_equal(LineString.new(Point.new(3.0, 2.0), Point.new(4.0, 3.0), Point.new(5.0, 4.0)),
+                 rows['baseline'])
   end
 
   # Test for inserting and querying a Polygon.
@@ -122,22 +113,16 @@ class GeospatialTest < IntegrationTestCase
   def test_good_polygon
     skip('Geospatial types are only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
-    test_polygon = Polygon.new([
-                                 LineString.new([
-                                                  Point.new(0, 0),
-                                                  Point.new(20, 0),
-                                                  Point.new(26, 26),
-                                                  Point.new(0, 26),
-                                                  Point.new(0, 0)
-                                                ]),
-                                 LineString.new([
-                                                  Point.new(1, 1),
-                                                  Point.new(1, 5),
-                                                  Point.new(5, 5),
-                                                  Point.new(5, 1),
-                                                  Point.new(1, 1)
-                                                ])
-                               ])
+    test_polygon = Polygon.new(LineString.new(Point.new(0, 0),
+                                              Point.new(20, 0),
+                                              Point.new(26, 26),
+                                              Point.new(0, 26),
+                                              Point.new(0, 0)),
+                               LineString.new(Point.new(1, 1),
+                                              Point.new(1, 5),
+                                              Point.new(5, 5),
+                                              Point.new(5, 1),
+                                              Point.new(1, 1)))
     @@session.execute('INSERT INTO simplex.polygons (name, polygon) VALUES (?, ?)',
                       arguments: ['test', test_polygon])
     rs = @@session.execute('SELECT * FROM simplex.polygons')
@@ -147,25 +132,19 @@ class GeospatialTest < IntegrationTestCase
     end
     assert_equal(2, rows.size)
     assert_equal(test_polygon, rows['test'])
-    assert_equal(
-      Polygon.new([
-                    LineString.new([
-                                     Point.new(0.0, 0.0),
-                                     Point.new(20.0, 0.0),
-                                     Point.new(25.0, 25.0),
-                                     Point.new(0.0, 25.0),
-                                     Point.new(0.0, 0.0)]),
-                    LineString.new([
-                                     Point.new(1.0, 1.0),
-                                     Point.new(2.0, 2.0),
-                                     Point.new(2.0, 1.0),
-                                     Point.new(1.0, 1.0)]),
-                    LineString.new([
-                                     Point.new(5.0, 1.0),
-                                     Point.new(7.0, 3.0),
-                                     Point.new(7.0, 1.0),
-                                     Point.new(5.0, 1.0)])
-                  ]),
-      rows['baseline'])
+    assert_equal(Polygon.new(LineString.new(Point.new(0.0, 0.0),
+                                            Point.new(20.0, 0.0),
+                                            Point.new(25.0, 25.0),
+                                            Point.new(0.0, 25.0),
+                                            Point.new(0.0, 0.0)),
+                             LineString.new(Point.new(1.0, 1.0),
+                                            Point.new(2.0, 2.0),
+                                            Point.new(2.0, 1.0),
+                                            Point.new(1.0, 1.0)),
+                             LineString.new(Point.new(5.0, 1.0),
+                                            Point.new(7.0, 3.0),
+                                            Point.new(7.0, 1.0),
+                                            Point.new(5.0, 1.0))),
+                 rows['baseline'])
   end
 end

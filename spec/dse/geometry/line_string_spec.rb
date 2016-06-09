@@ -11,15 +11,43 @@ module Dse
   module Geometry
     describe LineString do
       let(:line_string) do
-        LineString.new([
-                         Point.new(37.5, 21.1),
-                         Point.new(12.5, 22.1),
-                         Point.new(15.5, 1.1)
-                       ])
+        LineString.new(Point.new(37.5, 21.1), Point.new(12.5, 22.1), Point.new(15.5, 1.1))
       end
 
-      it 'wkt should work' do
+      context :constructor do
+        let(:p1) { Point.new(1, 2) }
+        let(:p2) { Point.new(1, 3) }
+
+        it 'should handle Point args' do
+          l = LineString.new(p1, p2)
+          expect(l.points).to eq([p1, p2])
+        end
+
+        it 'should handle no args' do
+          l = LineString.new
+          expect(l.points).to be_empty
+        end
+
+        it 'should error out if point args are not all Points' do
+          expect { LineString.new(p1, 1) }.to raise_error(ArgumentError)
+          expect { LineString.new('foo', p1) }.to raise_error(ArgumentError)
+          expect { LineString.new(p1, p2, nil) }.to raise_error(ArgumentError)
+        end
+
+        it 'should error out if one-arg form is not a WKT' do
+          expect { LineString.new(1) }.to raise_error(ArgumentError)
+          expect { LineString.new(nil) }.to raise_error(ArgumentError)
+          expect { LineString.new(p1) }.to raise_error(ArgumentError)
+        end
+      end
+
+      it 'should not allow mutation of points' do
+        expect { line_string.points << Point.new(9, 8) }.to raise_error(RuntimeError)
+      end
+
+      it '#wkt should work' do
         expect(line_string.wkt).to eq('LINESTRING (37.5 21.1, 12.5 22.1, 15.5 1.1)')
+        expect(LineString.new.wkt).to eq('LINESTRING ()')
       end
 
       context :big_endian do
@@ -36,11 +64,7 @@ module Dse
                                                         one_float + two_float +
                                                         three_float + four_float +
                                                         two_float + one_float)
-          expect(LineString.new([
-                                  Point.new(1.0, 2.0),
-                                  Point.new(3.0, 4.0),
-                                  Point.new(2, 1)
-                                ])).to eq(test_line_string)
+          expect(LineString.new(Point.new(1.0, 2.0), Point.new(3.0, 4.0), Point.new(2, 1))).to eq(test_line_string)
         end
 
         it 'should raise an error if type is incorrect' do
@@ -67,11 +91,7 @@ module Dse
                                                         one_float + two_float +
                                                         three_float + four_float +
                                                         two_float + one_float)
-          expect(LineString.new([
-                                  Point.new(1.0, 2.0),
-                                  Point.new(3.0, 4.0),
-                                  Point.new(2, 1)
-                                ])).to eq(test_line_string)
+          expect(LineString.new(Point.new(1.0, 2.0), Point.new(3.0, 4.0), Point.new(2, 1))).to eq(test_line_string)
         end
 
         it 'should raise an error if type is incorrect' do

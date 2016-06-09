@@ -19,35 +19,25 @@ module Dse
           expect(p.y).to eq(99.5)
         end
 
-        it 'should error out if args are not float-able' do
-          expect do
-            Point.new(1, Object.new)
-          end.to raise_error(ArgumentError)
-
-          expect do
-            Point.new(Object.new, 1)
-          end.to raise_error(ArgumentError)
+        it 'should error out if two-args form are not float-able' do
+          expect { Point.new(1, Object.new) }.to raise_error(ArgumentError)
+          expect { Point.new(1, Object.new) }.to raise_error(ArgumentError)
+          expect { Point.new(Object.new, 1) }.to raise_error(ArgumentError)
 
           # We specifically don't want to accept string or nil.
-          expect do
-            Point.new('abc', 1)
-          end.to raise_error(ArgumentError)
+          expect { Point.new('abc', 1) }.to raise_error(ArgumentError)
+          expect { Point.new(1, 'abc') }.to raise_error(ArgumentError)
+          expect { Point.new(nil, 1) }.to raise_error(ArgumentError)
+          expect { Point.new(1, nil) }.to raise_error(ArgumentError)
+        end
 
-          expect do
-            Point.new(1, 'abc')
-          end.to raise_error(ArgumentError)
-
-          expect do
-            Point.new(nil, 1)
-          end.to raise_error(ArgumentError)
-
-          expect do
-            Point.new(1, nil)
-          end.to raise_error(ArgumentError)
+        it 'should error out if one-arg form is not a WKT' do
+          expect { Point.new(1) }.to raise_error(ArgumentError)
+          expect { Point.new(nil) }.to raise_error(ArgumentError)
         end
       end
 
-      it 'wkt should work' do
+      it '#wkt should work' do
         expect(point.wkt).to eq('POINT (37.5 21.1)')
       end
 

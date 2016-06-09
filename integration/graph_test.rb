@@ -496,26 +496,18 @@ class GraphTest < IntegrationTestCase
 
     # Create the geo type instances we want to pass as params.
     point = Point.new(98, 3)
-    line = LineString.new([
-                              Dse::Geometry::Point.new(2, 5),
-                              Dse::Geometry::Point.new(5, 2)
-                          ])
-    poly = Polygon.new([
-                           LineString.new([
-                                              Point.new(0, 0),
-                                              Point.new(20, 0),
-                                              Point.new(26, 26),
-                                              Point.new(0, 26),
-                                              Point.new(0, 0)
-                                          ]),
-                           LineString.new([
-                                              Point.new(1, 1),
-                                              Point.new(1, 5),
-                                              Point.new(5, 5),
-                                              Point.new(5, 1),
-                                              Point.new(1, 1)
-                                          ])
-                       ])
+    line = LineString.new(Point.new(2, 5), Point.new(5, 2))
+    poly = Polygon.new(LineString.new(Point.new(0, 0),
+                                          Point.new(20, 0),
+                                          Point.new(26, 26),
+                                          Point.new(0, 26),
+                                          Point.new(0, 0)),
+                           LineString.new(Point.new(1, 1),
+                                          Point.new(1, 5),
+                                          Point.new(5, 5),
+                                          Point.new(5, 1),
+                                          Point.new(1, 1))
+                       )
 
     # Create the vertex.
     vertex = session.execute_graph("graph.addVertex(label, 'geo', 'loc', myloc, 'path', mypath, 'region', myregion)",
