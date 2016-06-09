@@ -16,6 +16,10 @@ module Dse
       # @return [Array<Point>] collection of points that make up this line-string.
       attr_reader :points
 
+      # @private
+      WKT_RE = /^LINESTRING\s*\(\s*([^)]+)\s*\)$/
+      POINT_SEPARATOR_RE = /\s*,\s*/
+
       # @param args [Array<Point>,Array<String>] varargs-style arguments in two forms:
       #   <ul><li>an ordered collection of points that make up this line-string.
       #           Must be empty or have at least two points.</li>
@@ -34,12 +38,30 @@ module Dse
           wkt = args.first
           Cassandra::Util.assert_instance_of(String, wkt)
 
-          raise NotImplementError, 'wkt processing not yet implemented'
+          if wkt == 'LINESTRING EMPTY'
+            @points = [].freeze
+          else
+            match = wkt.match(WKT_RE)
+            raise ArgumentError, "#{wkt.inspect} is not a valid WKT representation of a line-string" unless match
+            @points = self.class.parse_wkt_internal(match[1])
+          end
+        else
+          @points = args.freeze
+          @points.each do |p|
+            Cassandra::Util.assert_instance_of(Point, p, "#{p.inspect} is not a Point")
+          end
         end
-        @points = args.freeze
-        @points.each do |p|
-          Cassandra::Util.assert_instance_of(Point, p, "#{p.inspect} is not a Point")
+      end
+
+      # @private
+      def self.parse_wkt_internal(line_str)
+        point_strings = line_str.split(POINT_SEPARATOR_RE)
+        points = []
+        point_strings.each do |ps|
+          next if ps.empty?
+          points << Point.new(*Point.parse_wkt_internal(ps))
         end
+        points.freeze
       end
 
       # @return [String] well-known-text representation of this line-string.
