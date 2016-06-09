@@ -54,6 +54,8 @@ module Dse
 
       # @return [String] well-known-text representation of this polygon.
       def wkt
+        return 'POLYGON EMPTY' if @rings.empty?
+
         result = 'POLYGON ('
         first = true
         @rings.each do |ring|

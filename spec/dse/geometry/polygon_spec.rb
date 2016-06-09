@@ -33,7 +33,7 @@ module Dse
 
         it '#wkt should work' do
           expect(simple_polygon.wkt).to eq('POLYGON ((37.5 21.1, 12.5 22.1, 15.5 1.1, 37.5 21.1))')
-          expect(Polygon.new.wkt).to eq('POLYGON ()')
+          expect(Polygon.new.wkt).to eq('POLYGON EMPTY')
         end
       end
 
