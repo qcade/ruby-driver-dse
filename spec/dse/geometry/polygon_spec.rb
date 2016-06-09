@@ -55,9 +55,21 @@ module Dse
           expect { Polygon.new(ring1, ring2, nil) }.to raise_error(ArgumentError)
         end
 
-        it 'should error out if one-arg form is not a WKT' do
+        it 'should error out if one-arg form is not a Polygon WKT' do
           expect { Polygon.new(1) }.to raise_error(ArgumentError)
           expect { Polygon.new(nil) }.to raise_error(ArgumentError)
+          expect { Polygon.new('POLYGON ((1 2, 3 4, a b, 1 2))') }.to raise_error(ArgumentError)
+          expect do
+            Polygon.new('POLYGON ( ( 37.0 21.0, 12.0 22.0, 15.0 1.0, 37.0 21.0 ) , ' \
+                                       '(3.0 2.0, a 2.0, 6.0 5.0, 3.0 2.0))')
+          end.to raise_error(ArgumentError)
+        end
+
+        it 'should process correct WKT' do
+          expect(Polygon.new('POLYGON EMPTY')).to eq(Polygon.new)
+          expect(Polygon.new('POLYGON ( ( 37.0 21.0, 12.0 22.0, 15.0 1.0, 37.0 21.0 ) )')).to eq(Polygon.new(ring1))
+          expect(Polygon.new('POLYGON ( ( 37.0 21.0, 12.0 22.0, 15.0 1.0, 37.0 21.0 ) , ' \
+                                       '(3.0 2.0, 6.0 2.0, 6.0 5.0, 3.0 2.0))')).to eq(Polygon.new(ring1, ring2))
         end
       end
 

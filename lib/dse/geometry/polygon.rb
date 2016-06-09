@@ -18,6 +18,10 @@ module Dse
     class Polygon
       include Cassandra::CustomData
 
+      # @private
+      WKT_RE = /^POLYGON\s*\(\s*(.+?)\s*\)$/
+      LINESTRING_SEPARATOR_RE = /\s*\)(,\s*)?/
+
       # @param args [Array<LineString>,Array<String>] varargs-style arguments in two forms:
       #   <ul><li>an ordered collection of linear-rings that make up this polygon. Can be empty.</li>
       #       <li>one-element string array with the wkt representation.</li></ul>
@@ -30,15 +34,41 @@ module Dse
       #   polygon = Polygon.new('POLYGON ((0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 0.0), ' \
       #                         '(1.0 1.0, 1.0 5.0, 5.0 1.0, 1.0 1.0))')
       def initialize(*args)
+        # The constructor has two forms:
+        # 1. array (possibly empty) of LineString objects.
+        # 2. one String arg as the wkt representation.
+
         if args.size == 1 && args.first.is_a?(String)
           wkt = args.first
-          wkt
-          raise NotImplementError, 'wkt processing not yet implemented'
+
+          if wkt == 'POLYGON EMPTY'
+            @rings = [].freeze
+          else
+            match = wkt.match(WKT_RE)
+            raise ArgumentError, "#{wkt.inspect} is not a valid WKT representation of a polygon" unless match
+            @rings = parse_wkt_internal(match[1])
+          end
+        else
+          @rings = args.freeze
+          @rings.each do |ring|
+            Cassandra::Util.assert_instance_of(LineString, ring, "#{ring.inspect} is not a LineString")
+          end
         end
-        @rings = args.freeze
-        @rings.each do |ring|
-          Cassandra::Util.assert_instance_of(LineString, ring, "#{ring.inspect} is not a LineString")
+      end
+
+      # @private
+      def parse_wkt_internal(poly_str)
+        # poly_str is everything inside the outer parens. Example:
+        # original: POLYGON ( (1 2, 3 4, 5 6, 1 2), (9 8, 7 6, 5 4, 9 8) )
+        # poly_str: (1 2, 3 4, 5 6, 1 2), (9 8, 7 6, 5 4, 9 8)
+        line_string_strings = poly_str.split(LINESTRING_SEPARATOR_RE)
+        line_strings = []
+        line_string_strings.each do |ls|
+          # ls still has a leading open paren and possibly spaces.
+          ls.sub!(/\s*\(\s*/, '')
+          line_strings << LineString.new(*LineString.parse_wkt_internal(ls))
         end
+        line_strings.freeze
       end
 
       # @return [LineString] linear-ring characterizing the exterior of the polygon.

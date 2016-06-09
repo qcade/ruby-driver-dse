@@ -18,6 +18,10 @@ module Dse
       # @return [Float] the y coordinate of the point.
       attr_reader :y
 
+      # @private
+      WKT_RE = /^POINT\s*\(\s*([^)]+?)\s*\)$/
+      POINT_SPEC_RE = /^([0-9\-\.]+) ([0-9\-\.]+)$/
+
       # @param args [Array<Numeric>,Array<String>] varargs-style arguments in two forms:
       #   <ul><li>a two-element numeric array representing x,y coordinates.</li>
       #       <li>one-element string array with the wkt representation.</li></ul>
@@ -36,12 +40,16 @@ module Dse
           x, y = args
           Cassandra::Util.assert_instance_of(::Numeric, x)
           Cassandra::Util.assert_instance_of(::Numeric, y)
+          Cassandra::Util.assert(!x.nan?, 'x cannot be Float::NAN') if x.is_a?(Float)
+          Cassandra::Util.assert(!y.nan?, 'y cannot be Float::NAN') if y.is_a?(Float)
           @x = x.to_f
           @y = y.to_f
         when 1
           wkt = args.first
           Cassandra::Util.assert_instance_of(String, wkt)
-          raise NotImplementError, 'wkt processing not yet implemented'
+          match = wkt.match(WKT_RE)
+          raise ArgumentError, "#{wkt.inspect} is not a valid WKT representation of a point" unless match
+          @x, @y = self.class.parse_wkt_internal(match[1])
         else
           raise ArgumentError,
                 'wrong number of arguments: use one string argument (wkt) or two numeric arguments (x,y)'
@@ -57,6 +65,14 @@ module Dse
       def wkt_internal
         # This is a helper used to embed point coords into some container (e.g. line-string, polygon)
         "#{@x} #{@y}"
+      end
+
+      # @private
+      def self.parse_wkt_internal(point_str)
+        point_str.rstrip!
+        match = point_str.match(POINT_SPEC_RE)
+        raise ArgumentError, "#{point_str.inspect} is not a valid WKT representation of a point" unless match
+        [match[1].to_f, match[2].to_f]
       end
 
       # @private

@@ -29,11 +29,24 @@ module Dse
           expect { Point.new(1, 'abc') }.to raise_error(ArgumentError)
           expect { Point.new(nil, 1) }.to raise_error(ArgumentError)
           expect { Point.new(1, nil) }.to raise_error(ArgumentError)
+
+          # And Nan.
+          expect { Point.new(Float::NAN, 1) }.to raise_error(ArgumentError)
+          expect { Point.new(1, Float::NAN) }.to raise_error(ArgumentError)
         end
 
-        it 'should error out if one-arg form is not a WKT' do
+        it 'should error out if one-arg form is not a Point WKT' do
           expect { Point.new(1) }.to raise_error(ArgumentError)
           expect { Point.new(nil) }.to raise_error(ArgumentError)
+          expect { Point.new('LINESTRING (1 2, 3 4)') }.to raise_error(ArgumentError)
+          expect { Point.new('POINT (1 2, 3 4)') }.to raise_error(ArgumentError)
+          expect { Point.new('POINT (a 7)') }.to raise_error(ArgumentError)
+        end
+
+        it 'should process correct WKT' do
+          expect(Point.new('POINT (3.7 -5)')).to eq(Point.new(3.7, -5.0))
+          expect(Point.new('POINT ( 3.7 -5 )')).to eq(Point.new(3.7, -5.0))
+          expect(Point.new('POINT( 3.7 -5 )')).to eq(Point.new(3.7, -5.0))
         end
       end
 
