@@ -18,6 +18,10 @@ module Dse
     class Polygon
       include Cassandra::CustomData
 
+      # @return [Array<LineString>] collection of line-string's that make up this polygon. The first line-string
+      #   is the exterior ring and the rest are interior rings. It may be empty, indicating this is an empty polygon.
+      attr_reader :rings
+
       # @private
       WKT_RE = /^POLYGON\s*\(\s*(.+?)\s*\)$/
       LINESTRING_SEPARATOR_RE = /\s*\)(,\s*)?/
@@ -37,7 +41,7 @@ module Dse
       #                         '(1.0 1.0, 1.0 5.0, 5.0 1.0, 1.0 1.0))')
       def initialize(*args)
         # The constructor has two forms:
-        # 1. array (possibly empty) of LineString objects.
+        # 1. 0 or more LineString objects where the first is the exterior ring and the rest are interior rings.
         # 2. one String arg as the wkt representation.
 
         if args.size == 1 && args.first.is_a?(String)

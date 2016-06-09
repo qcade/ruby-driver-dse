@@ -231,8 +231,8 @@ end
 ```
 
 ### LineString
-A *LineString* is a set of lines, characterized by a sequence of *Point*'s. As *Point*'s live in the 2D xy-plane,
-so do *LineString*'s. Each line shares a point with another line, thus forming a string of lines. A real-world
+A *LineString* is a set of lines, characterized by a sequence of *Point*s. As *Point*s live in the 2D xy-plane,
+so do *LineString*s. Each line shares a point with another line, thus forming a string of lines. A real-world
 example of this is a path on a map. Columns in DSE have the custom type `org.apache.cassandra.db.marshal.LineStringType`.
 
 ```ruby
@@ -244,11 +244,9 @@ include Dse::Geometry
 session.execute("CREATE TABLE IF NOT EXISTS directions" \
                 " (origin text PRIMARY KEY, destination text, directions 'LineStringType')")
 session.execute('INSERT INTO directions (origin, destination, directions) VALUES (?, ?, ?)',
-                arguments: ['office', 'home', LineString.new([
-                                                                 Point.new(12.0, 21.0),
-                                                                 Point.new(13.0, 31.0),
-                                                                 Point.new(14.0, 41.0)
-                                                             ])])
+                arguments: ['office', 'home', LineString.new(Point.new(12.0, 21.0),
+                                                             Point.new(13.0, 31.0),
+                                                             Point.new(14.0, 41.0))])
 # Now retrieve the line-string.
 rs = session.execute('SELECT * FROM directions')
 rs.each do |row|
@@ -280,23 +278,19 @@ include Dse::Geometry
 # of linear-rings. A linear-ring is a LineString whose last point is the same as its first point.
 
 session.execute("CREATE TABLE IF NOT EXISTS places (name text PRIMARY KEY, layout 'PolygonType')")
-exterior_ring = LineString.new([
-                                   Point.new(0, 0),
-                                   Point.new(20, 0),
-                                   Point.new(26, 26),
-                                   Point.new(0, 26),
-                                   Point.new(0, 0)
-                                ])
+exterior_ring = LineString.new(Point.new(0, 0),
+                               Point.new(20, 0),
+                               Point.new(26, 26),
+                               Point.new(0, 26),
+                               Point.new(0, 0))
                                  
-interior_ring = LineString.new([
-                                   Point.new(1, 1),
-                                   Point.new(1, 5),
-                                   Point.new(5, 5),
-                                   Point.new(5, 1),
-                                   Point.new(1, 1)
-                                ])
+interior_ring = LineString.new(Point.new(1, 1),
+                               Point.new(1, 5),
+                               Point.new(5, 5),
+                               Point.new(5, 1),
+                               Point.new(1, 1))
 session.execute('INSERT INTO places (name, layout) VALUES (?, ?)',
-                arguments: ['Capitol', Polygon.new([ exterior_ring, interior_ring ])])
+                arguments: ['Capitol', Polygon.new(exterior_ring, interior_ring)])
 
 # Now retrieve the polygon
 rs = session.execute('SELECT * FROM places')
