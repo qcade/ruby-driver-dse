@@ -18,13 +18,34 @@ module Dse
       # @return [Float] the y coordinate of the point.
       attr_reader :y
 
-      # @param x [Float] the x coordinate of the point.
-      # @param y [Float] the y coordinate of the point.
-      def initialize(x, y)
-        Cassandra::Util.assert_instance_of(::Numeric, x)
-        Cassandra::Util.assert_instance_of(::Numeric, y)
-        @x = x.to_f
-        @y = y.to_f
+      # @param args [Array<Numeric>,Array<String>] varargs-style arguments in two forms:
+      #   <ul><li>a two-element numeric array representing x,y coordinates.</li>
+      #       <li>one-element string array with the wkt representation.</li></ul>
+      #
+      # @example Construct a Point with numeric arguments.
+      #   point = Point.new(3, 4)
+      # @example Construct a Point with a wkt string.
+      #   point = Point.new('POINT (3.0 4.0)')
+      def initialize(*args)
+        # The constructor has two forms:
+        # 1. two numeric args (x,y)
+        # 2. one String arg as the wkt representation.
+
+        case args.size
+        when 2
+          x, y = args
+          Cassandra::Util.assert_instance_of(::Numeric, x)
+          Cassandra::Util.assert_instance_of(::Numeric, y)
+          @x = x.to_f
+          @y = y.to_f
+        when 1
+          wkt = args.first
+          Cassandra::Util.assert_instance_of(String, wkt)
+          raise NotImplementError, 'wkt processing not yet implemented'
+        else
+          raise ArgumentError,
+                'wrong number of arguments: use one string argument (wkt) or two numeric arguments (x,y)'
+        end
       end
 
       # @return [String] well-known-text representation of this point.

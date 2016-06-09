@@ -18,9 +18,27 @@ module Dse
     class Polygon
       include Cassandra::CustomData
 
-      # @param rings [Array<LineString>] ordered collection of linear-rings that make up this polygon.
-      def initialize(rings)
-        @rings = rings.freeze
+      # @param args [Array<LineString>,Array<String>] varargs-style arguments in two forms:
+      #   <ul><li>an ordered collection of linear-rings that make up this polygon. Can be empty.</li>
+      #       <li>one-element string array with the wkt representation.</li></ul>
+      #
+      # @example Construct a Polygon with LineString objects.
+      #   exterior_ring = LineString.new(Point.new(0, 0), Point.new(10, 0), Point.new(10, 10), Point.new(0, 0))
+      #   interior_ring = LineString.new(Point.new(1, 1), Point.new(1, 5), Point.new(5, 1), Point.new(1, 1))
+      #   polygon = Polygon.new(exterior_ring, interior_ring)
+      # @example Construct a line-string with a wkt string.
+      #   polygon = Polygon.new('POLYGON ((0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 0.0), ' \
+      #                         '(1.0 1.0, 1.0 5.0, 5.0 1.0, 1.0 1.0))')
+      def initialize(*args)
+        if args.size == 1 && args.first.is_a?(String)
+          wkt = args.first
+          wkt
+          raise NotImplementError, 'wkt processing not yet implemented'
+        end
+        @rings = args.freeze
+        @rings.each do |ring|
+          Cassandra::Util.assert_instance_of(LineString, ring, "#{ring.inspect} is not a LineString")
+        end
       end
 
       # @return [LineString] linear-ring characterizing the exterior of the polygon.
@@ -29,8 +47,9 @@ module Dse
       end
 
       # @return [Array<LineString>] ordered collection of linear-rings that make up the interior of this polygon.
+      #     Empty if there are no interior rings.
       def interior_rings
-        @interior_rings ||= @rings[1..-1].freeze
+        @interior_rings ||= (@rings[1..-1] || []).freeze
       end
 
       # @return [String] well-known-text representation of this polygon.
@@ -105,7 +124,7 @@ module Dse
         num_rings.times do
           rings << LineString.deserialize_raw(buffer)
         end
-        Polygon.new(rings)
+        Polygon.new(*rings)
       end
 
       # Serialize this domain object into a byte array to send to DSE.
