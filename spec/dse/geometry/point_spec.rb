@@ -29,6 +29,10 @@ module Dse
           expect { Point.new(1, 'abc') }.to raise_error(ArgumentError)
           expect { Point.new(nil, 1) }.to raise_error(ArgumentError)
           expect { Point.new(1, nil) }.to raise_error(ArgumentError)
+
+          # And Nan.
+          expect { Point.new(Float::NAN, 1) }.to raise_error(ArgumentError)
+          expect { Point.new(1, Float::NAN) }.to raise_error(ArgumentError)
         end
 
         it 'should error out if one-arg form is not a Point WKT' do

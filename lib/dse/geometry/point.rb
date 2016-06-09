@@ -40,6 +40,8 @@ module Dse
           x, y = args
           Cassandra::Util.assert_instance_of(::Numeric, x)
           Cassandra::Util.assert_instance_of(::Numeric, y)
+          Cassandra::Util.assert(!x.nan?, 'x cannot be Float::NAN') if x.is_a?(Float)
+          Cassandra::Util.assert(!y.nan?, 'y cannot be Float::NAN') if y.is_a?(Float)
           @x = x.to_f
           @y = y.to_f
         when 1
