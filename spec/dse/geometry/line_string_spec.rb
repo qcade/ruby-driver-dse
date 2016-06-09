@@ -47,7 +47,7 @@ module Dse
 
       it '#wkt should work' do
         expect(line_string.wkt).to eq('LINESTRING (37.5 21.1, 12.5 22.1, 15.5 1.1)')
-        expect(LineString.new.wkt).to eq('LINESTRING ()')
+        expect(LineString.new.wkt).to eq('LINESTRING EMPTY')
       end
 
       context :big_endian do

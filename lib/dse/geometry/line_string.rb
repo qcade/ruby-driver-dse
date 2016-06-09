@@ -44,7 +44,7 @@ module Dse
 
       # @return [String] well-known-text representation of this line-string.
       def wkt
-        "LINESTRING (#{wkt_internal})"
+        @points.empty? ? 'LINESTRING EMPTY' : "LINESTRING (#{wkt_internal})"
       end
 
       # @private
