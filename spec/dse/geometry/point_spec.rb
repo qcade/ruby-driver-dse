@@ -13,22 +13,19 @@ module Dse
       let(:point) {Point.new(37.5, 21.1)}
 
       context :constructor do
-        let(:fake_float) {double('fake_float')}
-
         it 'should handle float-like args' do
-          expect(fake_float).to receive(:to_f).and_return(99.5)
-          p = Point.new(1, fake_float)
+          p = Point.new(1, 99.5)
           expect(p.x).to eq(1.0)
           expect(p.y).to eq(99.5)
         end
 
         it 'should error out if args are not float-able' do
           expect do
-            Point.new(1, fake_float)
+            Point.new(1, Object.new)
           end.to raise_error(ArgumentError)
 
           expect do
-            Point.new(fake_float, 1)
+            Point.new(Object.new, 1)
           end.to raise_error(ArgumentError)
 
           # We specifically don't want to accept string or nil.
