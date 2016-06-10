@@ -46,6 +46,9 @@ module Dse
           expect(LineString.new('LINESTRING EMPTY')).to eq(LineString.new)
           expect(LineString.new('LINESTRING ( 3.7 -5, 12 9 , 15 8 )'))
             .to eq(LineString.new(Point.new(3.7, -5.0), Point.new(12.0, 9.0), Point.new(15.0, 8.0)))
+          expect(LineString.new('LINESTRING ( 3.7 -5, 12 9 ,
+                                             15 8 )'))
+              .to eq(LineString.new(Point.new(3.7, -5.0), Point.new(12.0, 9.0), Point.new(15.0, 8.0)))
         end
       end
 

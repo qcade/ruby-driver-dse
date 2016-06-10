@@ -47,6 +47,9 @@ module Dse
           expect(Point.new('POINT (3.7 -5)')).to eq(Point.new(3.7, -5.0))
           expect(Point.new('POINT ( 3.7 -5 )')).to eq(Point.new(3.7, -5.0))
           expect(Point.new('POINT( 3.7 -5 )')).to eq(Point.new(3.7, -5.0))
+          expect(Point.new('POINT( 3.7
+                     -5
+                     )')).to eq(Point.new(3.7, -5.0))
         end
       end
 

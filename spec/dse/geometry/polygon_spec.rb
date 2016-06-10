@@ -68,8 +68,13 @@ module Dse
         it 'should process correct WKT' do
           expect(Polygon.new('POLYGON EMPTY')).to eq(Polygon.new)
           expect(Polygon.new('POLYGON ( ( 37.0 21.0, 12.0 22.0, 15.0 1.0, 37.0 21.0 ) )')).to eq(Polygon.new(ring1))
+          expected_polygon = Polygon.new(ring1, ring2)
           expect(Polygon.new('POLYGON ( ( 37.0 21.0, 12.0 22.0, 15.0 1.0, 37.0 21.0 ) , ' \
-                                       '(3.0 2.0, 6.0 2.0, 6.0 5.0, 3.0 2.0))')).to eq(Polygon.new(ring1, ring2))
+                                       '(3.0 2.0, 6.0 2.0, 6.0 5.0, 3.0 2.0))')).to eq(expected_polygon)
+          expect(Polygon.new('POLYGON ( ( 37.0 21.0, 12.0 22.0, 15.0 1.0, 37.0 21.0 ) ,
+                                       (3.0 2.0, 6.0 2.0, 6.0 5.0, 3.0 2.0))')).to eq(expected_polygon)
+          expect(Polygon.new('POLYGON ((37.0 21.0, 12.0 22.0, 15.0 1.0, 37.0 21.0), ' \
+                                 '(3.0 2.0, 6.0 2.0, 6.0 5.0, 3.0 2.0))')).to eq(expected_polygon)
         end
       end
 
