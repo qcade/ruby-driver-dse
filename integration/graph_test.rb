@@ -23,7 +23,6 @@ class GraphTest < IntegrationTestCase
       remove_graph(@@session, 'test')
       create_graph(@@session, 'users')
       create_graph(@@session, 'test')
-      @@session.graph_options.graph_name = 'users'
 
       @@ccm_cluster.setup_graph_schema(<<-GRAPH, 'users')
       schema.propertyKey('name').Text().ifNotExists().create();
@@ -80,6 +79,13 @@ class GraphTest < IntegrationTestCase
     @@cluster.close unless CCM.dse_version < '5.0.0'
   end
 
+  def setup
+    unless CCM.dse_version < '5.0.0'
+      @@cluster.graph_options.clear
+      @@cluster.graph_options.graph_name = 'users'
+    end
+  end
+
   def self.create_graph(session, graph_name, rf = 3)
     replication_config = "{'class' : 'SimpleStrategy', 'replication_factor' : #{rf}}"
     session.execute_graph("system.graph('#{graph_name}').option('graph.replication_config').set(\"#{replication_config}\").ifNotExists().create()", timeout: 182)
@@ -102,7 +108,7 @@ class GraphTest < IntegrationTestCase
 
   # Test for basic graph system queries
   #
-  # test_session_graph_is_initially_nil tests that by default, no graph_name is specified and any graph query that uses
+  # test_cluster_graph_is_initially_nil tests that by default, no graph_name is specified and any graph query that uses
   # a specific graph fails. It also verifies that system graph queries still work, as these don't rely on any specific
   # graph.
   #
@@ -115,8 +121,10 @@ class GraphTest < IntegrationTestCase
   # @test_assumptions Graph-enabled Dse cluster.
   # @test_category dse:graph
   #
-  def test_session_graph_is_initially_nil
+  def test_cluster_graph_is_initially_nil
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    @@cluster.graph_options.clear
 
     session = @@cluster.connect
 
@@ -145,10 +153,10 @@ class GraphTest < IntegrationTestCase
   def test_raise_error_on_invalid_graph
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
-    session = @@cluster.connect(graph_name: 'ffff')
+    session = @@cluster.connect
 
     assert_raises(Cassandra::Errors::NoHostsAvailable) do
-      session.execute_graph('g.V()')
+      session.execute_graph('g.V()', graph_name: 'ffff')
     end
   end
 
@@ -167,7 +175,8 @@ class GraphTest < IntegrationTestCase
   def test_session_can_connect_to_existing_graph
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
-    session = @@cluster.connect(graph_name: 'users')
+    @@cluster.graph_options.graph_name = 'users'
+    session = @@cluster.connect
 
     assert_equal 'users', session.graph_name
     assert_equal 6, session.execute_graph('g.V().count()').first.value
@@ -176,8 +185,8 @@ class GraphTest < IntegrationTestCase
 
   # Test for switching graph connections
   #
-  # test_can_switch_graphs_in_session tests that a connection to a graph can be specified at cluster connect, but also
-  # can be changed later on in the session using graph options.
+  # test_can_switch_graphs_in_cluster tests that a connection to a graph can be specified when creating the cluster
+  # object, but also can be changed later on in the cluster using graph options.
   #
   # @since 1.0.0
   # @jira_ticket RUBY-200
@@ -186,15 +195,16 @@ class GraphTest < IntegrationTestCase
   # @test_assumptions Graph-enabled Dse cluster.
   # @test_category dse:graph
   #
-  def test_can_switch_graphs_in_session
+  def test_can_switch_graphs_in_cluster
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
-    session = @@cluster.connect(graph_name: 'users')
+    @@cluster.graph_options.graph_name = 'users'
+    session = @@cluster.connect
 
     assert_equal 'users', session.graph_name
     assert(session.execute_graph('g.V().count()').first.value > 0)
 
-    session.graph_options.graph_name = 'test'
+    @@cluster.graph_options.graph_name = 'test'
     assert_equal 'test', session.graph_name
     assert_equal 0, session.execute_graph('g.V().count()').first.value
   end
@@ -202,7 +212,7 @@ class GraphTest < IntegrationTestCase
   # Test for setting graph consistencies
   #
   # test_can_set_graph_consistencies tests that a graph read and write consistencies can be set in the graph options. It
-  # first sets a consistency of ALL in the cluster connect for both read and write. It then verifies that these
+  # first sets a consistency of ALL on the cluster object for both read and write. It then verifies that these
   # consistencies are properly set in the graph options. It then performs a read and write query to verify that the
   # consistencies are honored. It then stops one node, disabling the ability for consistency ALL to succeed, and
   # performs a read and write graph query and verifies a Cassandra::Errors::InvalidError is raised in each case.
@@ -219,10 +229,12 @@ class GraphTest < IntegrationTestCase
   def test_can_set_graph_consistencies
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
-    session = @@cluster.connect(graph_name: 'users', graph_read_consistency: :all, graph_write_consistency: :all)
+    @@cluster.graph_options.merge!(
+        Dse::Graph::Options.new(graph_name: 'users', graph_read_consistency: :all, graph_write_consistency: :all))
+    session = @@cluster.connect
 
-    assert_equal :all, session.graph_options.graph_read_consistency
-    assert_equal :all, session.graph_options.graph_write_consistency
+    assert_equal :all, @@cluster.graph_options.graph_read_consistency
+    assert_equal :all, @@cluster.graph_options.graph_write_consistency
 
     # First check that the consistencies work as expected
     assert_equal 6, session.execute_graph('g.V()').size
@@ -248,14 +260,14 @@ class GraphTest < IntegrationTestCase
 
   # Test for using graph options in session and queries
   #
-  # test_can_use_graph_options tests that graph options can be used in both sessions and queries. It first creates a
+  # test_can_use_graph_options tests that graph options can be used in both the cluster and queries. It first creates a
   # simple Dse::Graph::Options with graph_name and graph_language parameters set. It then verifies that these settings are
-  # honored when the graph options is used at session creation by executing a simple query. Finally it verifies that the
-  # same graph options can be used at query execution.
+  # honored when the graph options are merged into the cluster's graph options by executing a simple query. Finally it
+  # clears out the cluster graph options and verifies that the same graph options can be used at query execution.
   #
   # @since 1.0.0
   # @jira_ticket RUBY-204
-  # @expected_result graph options should be usable at session creation and query execution
+  # @expected_result graph options should be usable in cluster object and query execution
   #
   # @test_assumptions Graph-enabled Dse cluster.
   # @test_category dse:graph
@@ -267,14 +279,16 @@ class GraphTest < IntegrationTestCase
     assert_equal 'users', graph_options.graph_name
     assert_equal 'gremlin-groovy', graph_options.graph_language
 
-    session = @@cluster.connect(graph_options: graph_options)
+    @@cluster.graph_options.merge!(graph_options)
+    session = @@cluster.connect
 
     assert_equal 'users', session.graph_name
-    assert_equal 'gremlin-groovy', session.graph_options.graph_language
+    assert_equal 'gremlin-groovy', @@cluster.graph_options.graph_language
     vertices = session.execute_graph('g.V()')
     refute_nil vertices
 
     session.close
+    @@cluster.graph_options.clear
     session = @@cluster.connect
     second_vertices = session.execute_graph('g.V()', graph_options: graph_options)
     refute_nil second_vertices
@@ -295,6 +309,8 @@ class GraphTest < IntegrationTestCase
   #
   def test_can_create_a_new_graph
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    @@cluster.graph_options.clear
 
     session = @@cluster.connect
 
@@ -492,22 +508,23 @@ class GraphTest < IntegrationTestCase
   def test_create_vertex_with_geospatial_properties
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
-    session = @@cluster.connect(graph_name: 'users')
+    @@cluster.graph_options.graph_name = 'users'
+    session = @@cluster.connect
 
     # Create the geo type instances we want to pass as params.
     point = Point.new(98, 3)
     line = LineString.new(Point.new(2, 5), Point.new(5, 2))
     poly = Polygon.new(LineString.new(Point.new(0, 0),
-                                          Point.new(20, 0),
-                                          Point.new(26, 26),
-                                          Point.new(0, 26),
-                                          Point.new(0, 0)),
-                           LineString.new(Point.new(1, 1),
-                                          Point.new(1, 5),
-                                          Point.new(5, 5),
-                                          Point.new(5, 1),
-                                          Point.new(1, 1))
-                       )
+                                      Point.new(20, 0),
+                                      Point.new(26, 26),
+                                      Point.new(0, 26),
+                                      Point.new(0, 0)),
+                       LineString.new(Point.new(1, 1),
+                                      Point.new(1, 5),
+                                      Point.new(5, 5),
+                                      Point.new(5, 1),
+                                      Point.new(1, 1))
+                      )
 
     # Create the vertex.
     vertex = session.execute_graph("graph.addVertex(label, 'geo', 'loc', myloc, 'path', mypath, 'region', myregion)",

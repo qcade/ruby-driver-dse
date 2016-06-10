@@ -12,9 +12,6 @@ module Dse
   #
   # @see http://datastax.github.io/ruby-driver/api/cassandra/session Cassandra::Session
   class Session
-    # @return [Dse::Graph::Options] default graph options used by queries on this session.
-    attr_reader :graph_options
-
     # @private
     DEFAULT_GRAPH_TIMEOUT = 32
 
@@ -89,7 +86,7 @@ module Dse
       execute_graph_async(statement, options).get
     end
 
-    # @return [String] the name of the graph that graph queries are bound to by default in this session.
+    # @return [String] the name of the graph that graph queries are bound to by default in this session's cluster.
     def graph_name
       @graph_options.graph_name
     end

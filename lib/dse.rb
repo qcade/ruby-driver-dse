@@ -11,7 +11,18 @@ require 'cassandra'
 module Dse
   # Creates a {Dse::Cluster Cluster instance}, which extends Cassandra::Cluster
   # <http://datastax.github.io/ruby-driver/api/cassandra/cluster>`.
-  # The API is identical, except that it returns a `Dse::Session` (see below).
+  # The API is identical, except that it returns a `Dse::Session` (see below). It takes all of the same options
+  # as Cassandra.cluster and the following extra options.
+  #
+  # @option options [Dse::Graph::Options] :graph_options options for the DSE graph statement handler. Takes
+  #    priority over other `:graph_*` options specified below.
+  # @option options [String] :graph_name name of graph to use in graph statements
+  # @option options [String] :graph_source graph traversal source
+  # @option options [String] :graph_language language used in graph queries
+  # @option options [Cassandra::CONSISTENCIES] :graph_read_consistency read consistency level for graph statements.
+  #    Overrides the standard statement consistency level
+  # @option options [Cassandra::CONSISTENCIES] :graph_write_consistency write consistency level for graph statements.
+  #    Overrides the standard statement consistency level
   #
   # @example Connecting to localhost
   #   cluster = Dse.cluster
@@ -35,6 +46,12 @@ module Dse
   # @return [Cassandra::Future<Dse::Cluster>] a future resolving to the
   #   cluster instance.
   def self.cluster_async(options = {})
+    graph_options = if !options[:graph_options].nil?
+                      Cassandra::Util.assert_instance_of(Dse::Graph::Options, options[:graph_options])
+                      options[:graph_options]
+                    else
+                      Dse::Graph::Options.new(options)
+                    end
     username = options[:username]
     password = options[:password]
     options[:custom_types] ||= []
@@ -57,7 +74,11 @@ module Dse
 
     lbp = driver.load_balancing_policy
     driver.load_balancing_policy = Dse::LoadBalancing::Policies::HostTargeting.new(lbp)
-    driver.connect(hosts)
+    future = driver.connect(hosts)
+    future.then do |cluster|
+      cluster.graph_options.merge!(graph_options)
+      cluster
+    end
   end
 end
 

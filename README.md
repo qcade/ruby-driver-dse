@@ -31,8 +31,8 @@ require 'dse'
 # Connect to DSE and create a session whose graph queries will be tied to the graph
 # named 'mygraph' by default. See the documentation for Dse::Graph::Options for all
 # supported graph options.
-cluster = Dse.cluster
-session = cluster.connect(graph_name: 'mygraph')
+cluster = Dse.cluster(graph_name: 'mygraph')
+session = cluster.connect
 ```
 
 The DSE driver is a wrapper around the core Cassandra driver, so any valid options to
@@ -145,7 +145,7 @@ There are a number of other features in the api to make development easier.
 # We can access particular items in the result-set via array dereference
 p results[1]
 
-# Run a query against a different graph, but don't mess with the session default.
+# Run a query against a different graph, but don't mess with the cluster default.
 results = session.execute_graph('g.V().count()', graph_name: 'my_other__graph')
 
 # Create a Graph Options object that we can save off and use. The graph_options arg to execute_graph
@@ -154,9 +154,9 @@ options = Dse::Graph::Options.new
 options.graph_name = 'mygraph'
 results = session.execute_graph('g.V().count()', graph_options: options)
 
-# Change the graph options on the session to alter subsequent query behavior.
+# Change the graph options on the cluster to alter subsequent query behavior.
 # Switch to the analytics source in this case.
-session.graph_options.graph_source = 'a'
+cluster.graph_options.graph_source = 'a'
 results = session.execute_graph('g.V().count()')
 
 # Create a statement object encapsulating a graph query, options, parameters,
