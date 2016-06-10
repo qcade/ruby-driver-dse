@@ -21,7 +21,9 @@ module Dse
       # @private
       WKT_RE = /^POLYGON\s*\(\s*(.+?)\s*\)$/
       # @private
-      LINESTRING_SEPARATOR_RE = /\s*\)(,\s*)?/
+      LINESTRING_SEPARATOR_RE = /\),?/
+      # @private
+      EOL_RE = /[\r\n]/
 
       # @param args [Array<LineString>,Array<String>] varargs-style arguments in two forms:
       #   <ul><li>ordered collection of linear-rings that make up this polygon. Can be empty.</li>
@@ -42,8 +44,10 @@ module Dse
         # 2. one String arg as the wkt representation.
 
         if args.size == 1 && args.first.is_a?(String)
-          wkt = args.first
-
+          # subsitute eol chars in the string with a space.
+          wkt = args.first.gsub(EOL_RE, ' ')
+          # Consolidate whitespace before/after commas and parens.
+          wkt.gsub!(/\s*([,\(\)])\s*/, '\1')
           if wkt == 'POLYGON EMPTY'
             @rings = [].freeze
           else
@@ -74,7 +78,7 @@ module Dse
         line_strings.freeze
       end
 
-      # @return [LineString] linear-ring characterizing the exterior of the polygon.
+      # @return [LineString] linear-ring characterizing the exterior of the polygon. `nil` for empty polygon.
       def exterior_ring
         @rings.first
       end

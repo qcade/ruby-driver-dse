@@ -22,6 +22,8 @@ module Dse
       WKT_RE = /^POINT\s*\(\s*([^)]+?)\s*\)$/
       # @private
       POINT_SPEC_RE = /^([0-9\-\.]+) ([0-9\-\.]+)$/
+      # @private
+      EOL_RE = /[\r\n]/
 
       # @param args [Array<Numeric>,Array<String>] varargs-style arguments in two forms:
       #   <ul><li>two-element numeric array representing x,y coordinates.</li>
@@ -48,6 +50,8 @@ module Dse
         when 1
           wkt = args.first
           Cassandra::Util.assert_instance_of(String, wkt)
+          # subsitute eol chars in the string with a space.
+          wkt.gsub!(EOL_RE, ' ')
           match = wkt.match(WKT_RE)
           raise ArgumentError, "#{wkt.inspect} is not a valid WKT representation of a point" unless match
           @x, @y = self.class.parse_wkt_internal(match[1])
