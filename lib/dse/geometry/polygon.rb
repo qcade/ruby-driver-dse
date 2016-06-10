@@ -18,12 +18,9 @@ module Dse
     class Polygon
       include Cassandra::CustomData
 
-      # @return [Array<LineString>] collection of line-string's that make up this polygon. The first line-string
-      #   is the exterior ring and the rest are interior rings. It may be empty, indicating this is an empty polygon.
-      attr_reader :rings
-
       # @private
       WKT_RE = /^POLYGON\s*\(\s*(.+?)\s*\)$/
+      # @private
       LINESTRING_SEPARATOR_RE = /\s*\)(,\s*)?/
 
       # @param args [Array<LineString>,Array<String>] varargs-style arguments in two forms:

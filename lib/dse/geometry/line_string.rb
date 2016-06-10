@@ -18,6 +18,7 @@ module Dse
 
       # @private
       WKT_RE = /^LINESTRING\s*\(\s*([^)]+)\s*\)$/
+      # @private
       POINT_SEPARATOR_RE = /\s*,\s*/
 
       # @param args [Array<Point>,Array<String>] varargs-style arguments in two forms:

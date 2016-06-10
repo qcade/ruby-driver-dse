@@ -50,8 +50,10 @@ module Dse
         end
       end
 
-      it '#wkt should work' do
-        expect(point.wkt).to eq('POINT (37.5 21.1)')
+      context :wkt do
+        it 'should work' do
+          expect(point.wkt).to eq('POINT (37.5 21.1)')
+        end
       end
 
       context :big_endian do

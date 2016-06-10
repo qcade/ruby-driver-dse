@@ -20,6 +20,7 @@ module Dse
 
       # @private
       WKT_RE = /^POINT\s*\(\s*([^)]+?)\s*\)$/
+      # @private
       POINT_SPEC_RE = /^([0-9\-\.]+) ([0-9\-\.]+)$/
 
       # @param args [Array<Numeric>,Array<String>] varargs-style arguments in two forms:
