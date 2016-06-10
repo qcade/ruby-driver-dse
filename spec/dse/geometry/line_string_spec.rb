@@ -49,13 +49,17 @@ module Dse
         end
       end
 
-      it 'should not allow mutation of points' do
-        expect { line_string.points << Point.new(9, 8) }.to raise_error(RuntimeError)
+      context :frozen do
+        it 'should not allow mutation of points' do
+          expect { line_string.points << Point.new(9, 8) }.to raise_error(RuntimeError)
+        end
       end
 
-      it '#wkt should work' do
-        expect(line_string.wkt).to eq('LINESTRING (37.5 21.1, 12.5 22.1, 15.5 1.1)')
-        expect(LineString.new.wkt).to eq('LINESTRING EMPTY')
+      context :wkt do
+        it 'should work' do
+          expect(line_string.wkt).to eq('LINESTRING (37.5 21.1, 12.5 22.1, 15.5 1.1)')
+          expect(LineString.new.wkt).to eq('LINESTRING EMPTY')
+        end
       end
 
       context :big_endian do

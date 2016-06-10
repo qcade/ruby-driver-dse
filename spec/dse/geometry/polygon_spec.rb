@@ -31,7 +31,7 @@ module Dse
           expect { interior_rings << ring3 }.to raise_error(RuntimeError)
         end
 
-        it '#wkt should work' do
+        it 'wkt should work' do
           expect(simple_polygon.wkt).to eq('POLYGON ((37.5 21.1, 12.5 22.1, 15.5 1.1, 37.5 21.1))')
           expect(Polygon.new.wkt).to eq('POLYGON EMPTY')
         end
@@ -73,8 +73,10 @@ module Dse
         end
       end
 
-      it 'should not allow mutation of rings' do
-        expect { polygon.interior_rings << ring3 }.to raise_error(RuntimeError)
+      context 'frozen' do
+        it 'should not allow mutation of rings' do
+          expect { polygon.interior_rings << ring3 }.to raise_error(RuntimeError)
+        end
       end
 
       context :big_endian do
