@@ -126,14 +126,12 @@ class GraphTest < IntegrationTestCase
 
     @@cluster.graph_options.clear
 
-    session = @@cluster.connect
-
     assert_raises(Cassandra::Errors::InvalidError) do
-      session.execute_graph('g.V()')
+      @@session.execute_graph('g.V()')
     end
 
     # Can still make system queries
-    refute_nil session.execute_graph('system')
+    refute_nil @@session.execute_graph('system')
   end
 
   # Test for invalid graph queries
@@ -153,10 +151,8 @@ class GraphTest < IntegrationTestCase
   def test_raise_error_on_invalid_graph
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
-    session = @@cluster.connect
-
     assert_raises(Cassandra::Errors::NoHostsAvailable) do
-      session.execute_graph('g.V()', graph_name: 'ffff')
+      @@session.execute_graph('g.V()', graph_name: 'ffff')
     end
   end
 
@@ -176,11 +172,10 @@ class GraphTest < IntegrationTestCase
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
     @@cluster.graph_options.graph_name = 'users'
-    session = @@cluster.connect
 
-    assert_equal 'users', session.graph_name
-    assert_equal 6, session.execute_graph('g.V().count()').first.value
-    refute_nil session.execute_graph("g.V().has('name', 'marko')").first
+    assert_equal 'users', @@session.graph_name
+    assert_equal 6, @@session.execute_graph('g.V().count()').first.value
+    refute_nil @@session.execute_graph("g.V().has('name', 'marko')").first
   end
 
   # Test for switching graph connections
@@ -199,14 +194,13 @@ class GraphTest < IntegrationTestCase
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
     @@cluster.graph_options.graph_name = 'users'
-    session = @@cluster.connect
 
-    assert_equal 'users', session.graph_name
-    assert(session.execute_graph('g.V().count()').first.value > 0)
+    assert_equal 'users', @@session.graph_name
+    assert(@@session.execute_graph('g.V().count()').first.value > 0)
 
     @@cluster.graph_options.graph_name = 'test'
-    assert_equal 'test', session.graph_name
-    assert_equal 0, session.execute_graph('g.V().count()').first.value
+    assert_equal 'test', @@session.graph_name
+    assert_equal 0, @@session.execute_graph('g.V().count()').first.value
   end
 
   # Test for setting graph consistencies
@@ -231,28 +225,27 @@ class GraphTest < IntegrationTestCase
 
     @@cluster.graph_options.merge!(
         Dse::Graph::Options.new(graph_name: 'users', graph_read_consistency: :all, graph_write_consistency: :all))
-    session = @@cluster.connect
 
     assert_equal :all, @@cluster.graph_options.graph_read_consistency
     assert_equal :all, @@cluster.graph_options.graph_write_consistency
 
     # First check that the consistencies work as expected
-    assert_equal 6, session.execute_graph('g.V()').size
-    session.execute_graph("graph.addVertex(label, 'person', 'name', 'yoda', 'age', 100);")
-    assert_equal 7, session.execute_graph('g.V()').size
-    session.execute_graph("g.V().has('person', 'name', 'yoda').drop()")
-    assert_equal 6, session.execute_graph('g.V()').size
+    assert_equal 6, @@session.execute_graph('g.V()').size
+    @@session.execute_graph("graph.addVertex(label, 'person', 'name', 'yoda', 'age', 100);")
+    assert_equal 7, @@session.execute_graph('g.V()').size
+    @@session.execute_graph("g.V().has('person', 'name', 'yoda').drop()")
+    assert_equal 6, @@session.execute_graph('g.V()').size
 
     @@ccm_cluster.stop_node('node1')
 
     # Read consistency failure
     assert_raises(Cassandra::Errors::InvalidError) do
-      session.execute_graph('g.V()')
+      @@session.execute_graph('g.V()')
     end
 
     # Write consistency failure
     assert_raises(Cassandra::Errors::InvalidError) do
-      session.execute_graph("graph.addVertex(label, 'person', 'name', 'yoda', 'age', 100);", timeout: 5)
+      @@session.execute_graph("graph.addVertex(label, 'person', 'name', 'yoda', 'age', 100);", timeout: 5)
     end
 
     @@ccm_cluster.start_node('node1')
@@ -280,17 +273,15 @@ class GraphTest < IntegrationTestCase
     assert_equal 'gremlin-groovy', graph_options.graph_language
 
     @@cluster.graph_options.merge!(graph_options)
-    session = @@cluster.connect
 
-    assert_equal 'users', session.graph_name
+    assert_equal 'users', @@session.graph_name
     assert_equal 'gremlin-groovy', @@cluster.graph_options.graph_language
-    vertices = session.execute_graph('g.V()')
+    vertices = @@session.execute_graph('g.V()')
     refute_nil vertices
 
-    session.close
+    # Clear the graph options to be sure that the graph options specified in the query has an effect.
     @@cluster.graph_options.clear
-    session = @@cluster.connect
-    second_vertices = session.execute_graph('g.V()', graph_options: graph_options)
+    second_vertices = @@session.execute_graph('g.V()', graph_options: graph_options)
     refute_nil second_vertices
     assert_equal vertices, second_vertices
   end
@@ -312,11 +303,9 @@ class GraphTest < IntegrationTestCase
 
     @@cluster.graph_options.clear
 
-    session = @@cluster.connect
-
-    GraphTest.create_graph(session, 'new_graph')
-    refute_nil session.execute_graph('g.V()', graph_name: 'new_graph')
-    GraphTest.remove_graph(session, 'new_graph')
+    GraphTest.create_graph(@@session, 'new_graph')
+    refute_nil @@session.execute_graph('g.V()', graph_name: 'new_graph')
+    GraphTest.remove_graph(@@session, 'new_graph')
   end
 
   # Test for using graph query parameters
@@ -508,9 +497,6 @@ class GraphTest < IntegrationTestCase
   def test_create_vertex_with_geospatial_properties
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
-    @@cluster.graph_options.graph_name = 'users'
-    session = @@cluster.connect
-
     # Create the geo type instances we want to pass as params.
     point = Point.new(98, 3)
     line = LineString.new(Point.new(2, 5), Point.new(5, 2))
@@ -527,9 +513,9 @@ class GraphTest < IntegrationTestCase
                       )
 
     # Create the vertex.
-    vertex = session.execute_graph("graph.addVertex(label, 'geo', 'loc', myloc, 'path', mypath, 'region', myregion)",
+    vertex = @@session.execute_graph("graph.addVertex(label, 'geo', 'loc', myloc, 'path', mypath, 'region', myregion)",
                                    arguments: { myloc: point, mypath: line, myregion: poly }).first
-    session.execute_graph("g.V().hasLabel('geo').drop()")
+    @@session.execute_graph("g.V().hasLabel('geo').drop()")
     assert_equal('POINT (98 3)', vertex['loc'].first.value)
     assert_equal('LINESTRING (2 5, 5 2)', vertex['path'].first.value)
     assert_equal('POLYGON ((0 0, 20 0, 26 26, 0 26, 0 0), (1 1, 1 5, 5 5, 5 1, 1 1))', vertex['region'].first.value)
