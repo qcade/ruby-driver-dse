@@ -13,7 +13,7 @@ class GeospatialTest < IntegrationTestCase
       @@ccm_cluster.setup_schema("CREATE KEYSPACE simplex WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}")
 
       @cluster = Dse.cluster
-      @session = @cluster.connect(keyspace: 'simplex')
+      @session = @cluster.connect('simplex')
     end
   end
 
@@ -89,6 +89,8 @@ class GeospatialTest < IntegrationTestCase
   # @test_category dse:geospatial
   #
   def test_point_type_edge_cases
+    skip('Geospatial types are only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
     @session.execute("CREATE TABLE points (k text PRIMARY KEY, v 'PointType')")
 
     assert_raises(Cassandra::Errors::InvalidError) do
@@ -183,6 +185,8 @@ class GeospatialTest < IntegrationTestCase
   # @test_category dse:geospatial
   #
   def test_can_insert_point_types_into_collections
+    skip('Geospatial types are only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
     @session.execute("CREATE TYPE udt1 (g 'PointType')")
     @session.execute("CREATE TABLE point_test (k int PRIMARY KEY, l list<'PointType'>, s set<'PointType'>,
                       mk map<'PointType', int>, mv map<int, 'PointType'>, t tuple<'PointType', 'PointType'>,
@@ -245,6 +249,8 @@ class GeospatialTest < IntegrationTestCase
   # @test_category dse:geospatial
   #
   def test_can_insert_point_type_as_keys
+    skip('Geospatial types are only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
     @session.execute("CREATE TABLE pk_test (k 'PointType' PRIMARY KEY, v int)")
     @session.execute("CREATE TABLE clustering_test (k0 text, k1 'PointType', v int, PRIMARY KEY (k0, k1))")
     test_point = Dse::Geometry::Point.new(38.0, 21.0)
@@ -279,6 +285,8 @@ class GeospatialTest < IntegrationTestCase
   # @test_category dse:geospatial
   #
   def test_can_index_on_point_type
+    skip('Geospatial types are only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
     # Secondary index
     @session.execute("CREATE TABLE index_test (k int PRIMARY KEY, v frozen<map<'PointType', 'PointType'>>)")
     @session.execute("CREATE INDEX v_index ON index_test (full(v))")
@@ -391,6 +399,8 @@ class GeospatialTest < IntegrationTestCase
   # @test_category dse:geospatial
   #
   def test_line_string_type_edge_cases
+    skip('Geospatial types are only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
     @session.execute("CREATE TABLE line_strings (k text PRIMARY KEY, v 'LineStringType')")
 
     assert_raises(Cassandra::Errors::InvalidError) do
@@ -490,6 +500,8 @@ class GeospatialTest < IntegrationTestCase
   # @test_category dse:geospatial
   #
   def test_can_insert_line_string_types_into_collections
+    skip('Geospatial types are only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
     @session.execute("CREATE TYPE udt1 (g 'LineStringType')")
     @session.execute("CREATE TABLE linestring_test (k int PRIMARY KEY, l list<'LineStringType'>, s set<'LineStringType'>,
                       mk map<'LineStringType', int>, mv map<int, 'LineStringType'>,
@@ -554,6 +566,8 @@ class GeospatialTest < IntegrationTestCase
   # @test_category dse:geospatial
   #
   def test_can_insert_line_string_type_as_keys
+    skip('Geospatial types are only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
     @session.execute("CREATE TABLE pk_test2 (k 'LineStringType' PRIMARY KEY, v int)")
     @session.execute("CREATE TABLE clustering_test2 (k0 text, k1 'LineStringType', v int, PRIMARY KEY (k0, k1))")
     points = [Dse::Geometry::Point.new(2.0, 3.0), Dse::Geometry::Point.new(3.0, 4.0)]
@@ -589,6 +603,8 @@ class GeospatialTest < IntegrationTestCase
   # @test_category dse:geospatial
   #
   def test_can_index_on_line_string_type
+    skip('Geospatial types are only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
     # Secondary index
     @session.execute("CREATE TABLE index_test2 (k int PRIMARY KEY, v frozen<map<'LineStringType', 'LineStringType'>>)")
     @session.execute("CREATE INDEX v_index ON index_test2 (full(v))")
@@ -712,6 +728,8 @@ class GeospatialTest < IntegrationTestCase
   # @test_category dse:geospatial
   #
   def test_polygon_type_edge_cases
+    skip('Geospatial types are only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
     @session.execute("CREATE TABLE polygons (k text PRIMARY KEY, v 'PolygonType')")
 
     assert_raises(Cassandra::Errors::InvalidError) do
@@ -816,6 +834,8 @@ class GeospatialTest < IntegrationTestCase
   # @test_category dse:geospatial
   #
   def test_can_insert_polygon_types_into_collections
+    skip('Geospatial types are only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
     @session.execute("CREATE TYPE udt1 (g 'PolygonType')")
     @session.execute("CREATE TABLE polygon_test (k int PRIMARY KEY, l list<'PolygonType'>, s set<'PolygonType'>,
                       mk map<'PolygonType', int>, mv map<int, 'PolygonType'>,
@@ -880,6 +900,8 @@ class GeospatialTest < IntegrationTestCase
   # @test_category dse:geospatial
   #
   def test_can_insert_polygon_type_as_keys
+    skip('Geospatial types are only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
     @session.execute("CREATE TABLE pk_test3 (k 'PolygonType' PRIMARY KEY, v int)")
     @session.execute("CREATE TABLE clustering_test3 (k0 text, k1 'PolygonType', v int, PRIMARY KEY (k0, k1))")
     test_polygon = Dse::Geometry::Polygon.new('POLYGON ((0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0, 0.0 0.0),
@@ -915,6 +937,8 @@ class GeospatialTest < IntegrationTestCase
   # @test_category dse:geospatial
   #
   def test_can_index_on_polygon_type
+    skip('Geospatial types are only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+    
     # Secondary index
     @session.execute("CREATE TABLE index_test3 (k int PRIMARY KEY, v frozen<map<'PolygonType', 'PolygonType'>>)")
     @session.execute("CREATE INDEX v_index ON index_test3 (full(v))")
