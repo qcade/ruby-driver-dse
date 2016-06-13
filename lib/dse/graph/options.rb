@@ -76,6 +76,19 @@ module Dse
         result
       end
 
+      # @private
+      def merge!(other)
+        result = merge(other)
+        @real_options = result.instance_variable_get(:@real_options)
+        self
+      end
+
+      # @private
+      def clear
+        # Used by tests only.
+        @real_options.clear
+      end
+
       # @return whether or not this options object is configured for the analytics graph source.
       def analytics?
         @real_options[:graph_source] == 'a'

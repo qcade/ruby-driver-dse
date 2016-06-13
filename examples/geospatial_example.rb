@@ -9,7 +9,7 @@ require 'dse'
 include Dse::Geometry
 
 cluster = Dse.cluster
-session = cluster.connect(keyspace: 'simplex')
+session = cluster.connect('simplex')
 
 ########## Point ##############
 puts "==== Point ====\n"

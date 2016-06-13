@@ -16,8 +16,8 @@ end
 # Connect to the cluster and get a session whose graph queries will be tied to the graph
 # named STUDIO_TUTORIAL_GRAPH by default. See the documentation for Dse::Graph::Options for all
 # supported graph options.
-cluster = Dse.cluster
-session = cluster.connect(graph_name: 'STUDIO_TUTORIAL_GRAPH')
+cluster = Dse.cluster(graph_name: 'STUDIO_TUTORIAL_GRAPH')
+session = cluster.connect
 
 puts '-- Run a simple query to get all vertices in our graph. --'
 emit_result(session.execute_graph('g.V()'))
@@ -37,8 +37,8 @@ options = Dse::Graph::Options.new
 options.graph_source = 'a'
 emit_result(session.execute_graph('g.E().limit(1)', graph_options: options))
 
-puts '-- Change the graph source on the session so that all future queries use it. --'
-session.graph_options.graph_source = 'a'
+puts '-- Change the graph source on the cluster so that all future queries use it. --'
+cluster.graph_options.graph_source = 'a'
 emit_result(session.execute_graph('g.E().limit(1)'))
 
 puts '-- Use a Graph Statement object --'

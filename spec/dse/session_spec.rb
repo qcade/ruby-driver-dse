@@ -13,10 +13,11 @@ module Dse
     let(:futures_factory) { double('futures-factory') }
     let(:future) { double('future') }
     let(:cassandra_session) { double('cassandra_session') }
-    let(:session) { Session.new(cassandra_session, Dse::Graph::Options.new, futures_factory) }
+    let(:graph_options) { Dse::Graph::Options.new }
+    let(:session) { Session.new(cassandra_session, graph_options, futures_factory) }
     context :execute_graph_async do
       it 'should succeed without query parameters' do
-        expected_graph_statement = Dse::Graph::Statement.new('g.V()', nil, session.graph_options)
+        expected_graph_statement = Dse::Graph::Statement.new('g.V()', nil, graph_options)
         expect(cassandra_session).to receive(:execute_async)
           .with(expected_graph_statement, timeout: 32,
                                           payload: { 'graph-source' => 'g', 'graph-language' => 'gremlin-groovy' })
@@ -26,7 +27,7 @@ module Dse
       end
 
       it 'should succeed with query parameters' do
-        expected_graph_statement = Dse::Graph::Statement.new('g.V().limit(n)', { n: 2 }, session.graph_options)
+        expected_graph_statement = Dse::Graph::Statement.new('g.V().limit(n)', { n: 2 }, graph_options)
         expect(cassandra_session).to receive(:execute_async)
           .with(expected_graph_statement, arguments: { n: 2 }, timeout: 32,
                                           payload: { 'graph-source' => 'g', 'graph-language' => 'gremlin-groovy' })

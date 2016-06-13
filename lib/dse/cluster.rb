@@ -10,6 +10,9 @@ module Dse
   # a {http://datastax.github.io/ruby-driver/api/cassandra/cluster Cassandra::Cluster} and exposes all of its
   # functionality.
   class Cluster
+    # @return [Dse::Graph::Options] default graph options used by queries on this cluster.
+    attr_reader :graph_options
+
     # @private
     def initialize(logger,
                    io_reactor,
@@ -43,6 +46,7 @@ module Dse
                                                  connector,
                                                  futures_factory,
                                                  timestamp_generator)
+      @graph_options = Dse::Graph::Options.new
 
       # We need the futures factory ourselves for async error reporting and potentially for our
       # own async processing independent of the C* driver.
@@ -53,36 +57,25 @@ module Dse
     # Cassandra::Cluster#connect_async}
     # to connect asynchronously to a cluster, but returns a future that will resolve to a DSE session rather than
     # Cassandra session.
-    # @param options [Hash] (nil) connection options
-    # @option options [String] :keyspace name of keyspace to scope session to for cql queries.
-    # @option options [Dse::Graph::Options] :graph_options options for the DSE graph statement handler. Takes
-    #    priority over other `:graph_*` options specified below.
-    # @option options [String] :graph_name name of graph to use in graph statements
-    # @option options [String] :graph_source graph traversal source
-    # @option options [String] :graph_language language used in graph queries
-    # @option options [Cassandra::CONSISTENCIES] :graph_read_consistency read consistency level for graph statements.
-    #    Overrides the standard statement consistency level
-    # @option options [Cassandra::CONSISTENCIES] :graph_write_consistency write consistency level for graph statements.
-    #    Overrides the standard statement consistency level
+    #
+    # @param keyspace [String] optional keyspace to scope session to
+    #
     # @return [Cassandra::Future<Dse::Session>]
-    def connect_async(options = {})
-      future = @delegate_cluster.connect_async(options[:keyspace])
+    def connect_async(keyspace = nil)
+      future = @delegate_cluster.connect_async(keyspace)
       # We want to actually return a DSE session upon successful connection.
       future.then do |cassandra_session|
-        graph_options = if !options[:graph_options].nil?
-                          Cassandra::Util.assert_instance_of(Dse::Graph::Options, options[:graph_options])
-                          options[:graph_options]
-                        else
-                          Dse::Graph::Options.new(options)
-                        end
-        Dse::Session.new(cassandra_session, graph_options, @futures)
+        Dse::Session.new(cassandra_session, @graph_options, @futures)
       end
     end
 
     # Synchronous variant of {#connect_async}.
+    #
+    # @param keyspace [String] optional keyspace to scope the session to
+    #
     # @return [Dse::Session]
-    def connect(*args)
-      connect_async(*args).get
+    def connect(keyspace = nil)
+      connect_async(keyspace).get
     end
 
     #### The following methods handle arbitrary delegation to the underlying cluster object. ####
