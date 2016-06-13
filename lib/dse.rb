@@ -5,7 +5,7 @@
 #++
 
 require 'json'
-require 'gss_api_context'
+require 'gss_api_context' unless RUBY_ENGINE == 'jruby'
 require 'cassandra'
 
 module Dse
