@@ -21,7 +21,7 @@ module Dse
       # @private
       WKT_RE = /^POINT\s*\(\s*([^)]+?)\s*\)$/
       # @private
-      POINT_SPEC_RE = /^([0-9\-\.]+) ([0-9\-\.]+)$/
+      POINT_SPEC_RE = /^([0-9\-\.]+)\s+([0-9\-\.]+)$/
       # @private
       EOL_RE = /[\r\n]/
 
