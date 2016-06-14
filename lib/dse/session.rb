@@ -86,11 +86,6 @@ module Dse
       execute_graph_async(statement, options).get
     end
 
-    # @return [String] the name of the graph that graph queries are bound to by default in this session's cluster.
-    def graph_name
-      @graph_options.graph_name
-    end
-
     #### The following methods handle arbitrary delegation to the underlying session object. ####
     protected
 
