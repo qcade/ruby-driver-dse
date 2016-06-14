@@ -89,6 +89,8 @@ module Dse
         # @param principal [String] (nil) The principal whose cached credentials are used to authenticate. Defaults
         #        to the first principal stored in the ticket cache.
         def initialize(service, host_resolver = true, principal = nil)
+          raise NotImplementedError, "JRuby does not yet support the GssApi authenticator" if RUBY_ENGINE == 'jruby'
+
           @service = service
           @host_resolver = case host_resolver
                            when false

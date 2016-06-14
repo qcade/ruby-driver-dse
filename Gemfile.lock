@@ -43,10 +43,13 @@ GEM
     diff-lcs (1.2.5)
     docile (1.1.5)
     ffi (1.9.10)
+    ffi (1.9.10-java)
     gherkin (3.2.0)
     ione (1.2.3)
     json (1.8.3)
+    json (1.8.3-java)
     lz4-ruby (0.3.3)
+    lz4-ruby (0.3.3-java)
     minitest (4.7.5)
     multi_json (1.11.2)
     multi_test (0.1.2)
@@ -88,12 +91,16 @@ GEM
       json (~> 1.8)
       simplecov-html (~> 0.10.0)
     simplecov-html (0.10.0)
-    snappy (0.0.14)
+    snappy (0.0.15)
+    snappy (0.0.15-java)
+      snappy-jars (~> 1.1.0)
+    snappy-jars (1.1.0.1.2-java)
     thor (0.19.1)
     unicode-display_width (0.3.1)
     yard (0.8.7.6)
 
 PLATFORMS
+  java
   ruby
 
 DEPENDENCIES
