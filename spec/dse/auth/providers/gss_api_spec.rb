@@ -19,6 +19,8 @@ module Dse
             x
           end
 
+          return if RUBY_ENGINE == 'jruby'
+
           it 'should default to a NameInfoResolver' do
             provider = GssApi.new('foo')
             expect(provider.instance_variable_get(:@host_resolver)).to be_instance_of(GssApi::NameInfoResolver)
