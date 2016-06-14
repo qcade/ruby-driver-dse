@@ -171,9 +171,7 @@ class GraphTest < IntegrationTestCase
   def test_session_can_connect_to_existing_graph
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
-    @@cluster.graph_options.graph_name = 'users'
-
-    assert_equal 'users', @@session.graph_name
+    # The cluster graph-name is set to 'users' in setup.
     assert_equal 6, @@session.execute_graph('g.V().count()').first.value
     refute_nil @@session.execute_graph("g.V().has('name', 'marko')").first
   end
@@ -193,13 +191,10 @@ class GraphTest < IntegrationTestCase
   def test_can_switch_graphs_in_cluster
     skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
 
-    @@cluster.graph_options.graph_name = 'users'
-
-    assert_equal 'users', @@session.graph_name
+    # The graph-name is 'users', set in setup.
     assert(@@session.execute_graph('g.V().count()').first.value > 0)
 
     @@cluster.graph_options.graph_name = 'test'
-    assert_equal 'test', @@session.graph_name
     assert_equal 0, @@session.execute_graph('g.V().count()').first.value
   end
 
@@ -274,7 +269,7 @@ class GraphTest < IntegrationTestCase
 
     @@cluster.graph_options.merge!(graph_options)
 
-    assert_equal 'users', @@session.graph_name
+    assert_equal 'users', @@cluster.graph_options.graph_name
     assert_equal 'gremlin-groovy', @@cluster.graph_options.graph_language
     vertices = @@session.execute_graph('g.V()')
     refute_nil vertices
