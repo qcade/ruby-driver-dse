@@ -1,7 +1,7 @@
 GIT
   remote: http://github.com/datastax/ruby-driver.git
-  revision: 132b9831da40943381e2600a6744be5c826434a7
-  branch: RUBY-220
+  revision: 487c242bc191ffc5f82284b90ccf2320dddf263a
+  branch: master
   specs:
     cassandra-driver (3.0.1)
       ione (~> 1.2)

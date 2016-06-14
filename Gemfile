@@ -11,7 +11,7 @@ gem 'cliver',        group: [:development, :test]
 if RUBY_ENGINE == 'jruby'
   gem 'cassandra-driver', '3.0.1', git: 'http://github.com/datastax/ruby-driver.git', branch: '3.0.1-jruby'
 else
-  gem 'cassandra-driver', '3.0.1', git: 'http://github.com/datastax/ruby-driver.git', branch: 'RUBY-220'
+  gem 'cassandra-driver', '3.0.1', git: 'http://github.com/datastax/ruby-driver.git', branch: 'master'
 end
 
 group :development do
