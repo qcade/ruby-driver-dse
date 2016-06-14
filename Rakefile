@@ -9,10 +9,6 @@ require 'bundler/gem_tasks'
 
 ENV['FAIL_FAST'] ||= 'Y'
 
-RSpec::Core::RakeTask.new(:rspec => :compile)
-
-Cucumber::Rake::Task.new(:cucumber => :compile)
-
 desc 'Run all tests'
 task test: [:rspec, :integration, :cucumber]
 
@@ -30,6 +26,8 @@ when 'jruby'
                             'integration/security/*_test.rb']
     t.verbose = true
   end
+  RSpec::Core::RakeTask.new(:rspec)
+  Cucumber::Rake::Task.new(:cucumber)
 else
   require 'rake/extensiontask'
 
@@ -41,5 +39,7 @@ else
                             'integration/security/*_test.rb']
     t.verbose = true
   end
+  RSpec::Core::RakeTask.new(:rspec => :compile)
+  Cucumber::Rake::Task.new(:cucumber => :compile)
 end
 
