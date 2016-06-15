@@ -41,6 +41,27 @@ class DatatypeUtils
     end
   end
 
+  def self.graph_datatypes
+    @@graph_datatypes ||= ['bigint',
+                           'blob',
+                           'boolean',
+                           'decimal',
+                           'double',
+                           'duration',
+                           'float',
+                           'inet',
+                           'int',
+                           'text',
+                           'timestamp',
+                           'uuid',
+                           'varint',
+                           'smallint',
+                           'point',
+                           'linestring',
+                           'polygon'
+    ]
+  end
+
   def self.collection_types
     @@collection_types ||= begin
       collection_types = %w(List Map Set)
@@ -54,10 +75,11 @@ class DatatypeUtils
     case datatype
     when 'ascii' then 'ascii'
     when 'bigint' then 765438000
-    when 'blob' then '0x626c6f62'
+    when 'blob' then 'YmxvYg=='
     when 'boolean' then true
     when 'decimal' then ::BigDecimal.new('1313123123.234234234234234234123')
     when 'double' then 3.141592653589793
+    when 'duration' then 'P2DT3H4M'
     when 'float' then 1.25
     when 'inet' then ::IPAddr.new('200.199.198.197')
     when 'int' then 4
@@ -71,7 +93,11 @@ class DatatypeUtils
     when 'time' then Cassandra::Time.new(1358013521)
     when 'smallint' then 425
     when 'tinyint' then 127
-      else raise 'Missing handling of: ' + datatype
+    when 'point' then Dse::Geometry::Point.new(38.0, 21.0)
+    when 'linestring' then Dse::Geometry::LineString.new('LINESTRING (30 10, 10 30, 40 40)')
+    when 'polygon' then Dse::Geometry::Polygon.new('POLYGON ((0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0, 0.0 0.0),
+                                                    (1.0 1.0, 4.0 9.0, 9.0 1.0, 1.0 1.0))')
+    else raise 'Missing handling of: ' + datatype
     end
   end
 
