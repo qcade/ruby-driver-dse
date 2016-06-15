@@ -5,6 +5,7 @@
 #++
 
 require File.dirname(__FILE__) + '/integration_test_case.rb'
+require File.dirname(__FILE__) + '/datatype_utils.rb'
 require 'set'
 
 include Dse::Geometry
@@ -64,10 +65,31 @@ class GraphTest < IntegrationTestCase
       GRAPH
 
       @@ccm_cluster.setup_graph_schema(<<-GRAPH, 'users')
-      schema.propertyKey('loc').Point().ifNotExists().create();
-      schema.propertyKey('path').Linestring().ifNotExists().create();
-      schema.propertyKey('region').Polygon().ifNotExists().create();
-      schema.vertexLabel('geo').properties('loc', 'path', 'region').ifNotExists().create();
+      schema.propertyKey('bigint').Bigint().ifNotExists().create();
+      schema.propertyKey('blob').Blob().ifNotExists().create();
+      schema.propertyKey('boolean').Boolean().ifNotExists().create();
+      schema.propertyKey('decimal').Decimal().ifNotExists().create();
+      schema.propertyKey('double').Double().ifNotExists().create();
+      schema.propertyKey('duration').Duration().ifNotExists().create();
+      schema.propertyKey('float').Float().ifNotExists().create();
+      schema.propertyKey('inet').Inet().ifNotExists().create();
+      schema.propertyKey('int').Int().ifNotExists().create();
+      schema.propertyKey('text').Text().ifNotExists().create();
+      schema.propertyKey('timestamp').Timestamp().ifNotExists().create();
+      schema.propertyKey('uuid').Uuid().ifNotExists().create();
+      schema.propertyKey('varint').Varint().ifNotExists().create();
+      schema.propertyKey('smallint').Smallint().ifNotExists().create();
+      schema.propertyKey('point').Point().ifNotExists().create();
+      schema.propertyKey('linestring').Linestring().ifNotExists().create();
+      schema.propertyKey('polygon').Polygon().ifNotExists().create();
+      schema.vertexLabel('datatypes').properties('bigint', 'blob', 'boolean', 'decimal', 'double', 'duration',
+                                                 'float', 'inet', 'int', 'text', 'timestamp', 'uuid', 'varint',
+                                                 'smallint', 'point', 'linestring', 'polygon').ifNotExists().create();
+      GRAPH
+
+      @@ccm_cluster.setup_graph_schema(<<-GRAPH, 'users')
+      schema.propertyKey('characterName').Text().create();
+      schema.vertexLabel('character').properties('characterName').create();
       GRAPH
 
       # Adding a sleep here to allow for schema to propagate to all graph nodes
@@ -99,10 +121,10 @@ class GraphTest < IntegrationTestCase
     end
   end
 
-  def self.reset_schema(session, graph)
+  def self.reset_schema(session, graph_name)
     session.execute_graph("schema.config().option('graph.traversal_sources.g.evaluation_timeout').set('PT120S')", graph_name: graph_name)
-    session.execute_graph('g.V().drop().iterate()', graph_name: graph)
-    session.execute_graph('schema.clear()', graph_name: graph)
+    session.execute_graph('g.V().drop().iterate()', graph_name: graph_name)
+    session.execute_graph('schema.clear()', graph_name: graph_name)
     session.execute_graph("schema.config().option('graph.traversal_sources.g.evaluation_timeout').set('PT30S')", graph_name: graph_name)
   end
 
@@ -383,42 +405,6 @@ class GraphTest < IntegrationTestCase
     assert_equal 6, @@session.execute_graph(graph_statement).size
   end
 
-  # Test for running analytics queries against the analytics master
-  #
-  # test_run_analytics_on_master tests that graph statements run against an analytics source
-  # execute on a particular node rather than round-robin.
-  #
-  # @since 1.0.0
-  # @jira_ticket RUBY-195
-  # @expected_result graph statements should execute consistently on the analytics master
-  #
-  def test_run_analytics_on_master
-    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
-    skip('Spark tests are not operable right now')
-
-    # There's a good chance the analytics server isn't quite ready for us yet. So, run
-    # repeatedly until we get a result.
-    num_attempts = 0
-    while num_attempts < 10
-      begin
-        num_attempts += 1
-
-        @@session.execute_graph('g.V().count()', graph_source: 'a')
-        break
-      rescue => e
-        puts "Analytics query attempt #{num_attempts} failed: #{e}"
-        sleep 10
-      end
-    end
-
-    # Run a query three times and verify that we always run against the same node.
-    hosts = Set.new
-    3.times do
-      hosts << @@session.execute_graph('g.V().count()', graph_source: 'a').execution_info.hosts.last.ip
-    end
-    assert_equal 1, hosts.size
-  end
-
   def validate_vertex(vertex, label, props, prop_values, meta_properties = nil)
     assert_equal label, vertex.label
 
@@ -475,45 +461,6 @@ class GraphTest < IntegrationTestCase
     results.each_with_index do |v, i|
       validate_vertex(v, labels[i], property_names[i], property_values[i])
     end
-  end
-
-  # Test for creating and retrieving a vertex with geospatial type properties.
-  #
-  # test_create_vertex_with_geospatial_properties tests that a vertex with point, linestring, and polygon
-  # properties can be created and retrieved.
-  #
-  # @since 1.0.0
-  # @jira_ticket RUBY-197
-  # @expected_result The new vertex should be created and retrieved.
-  #
-  # @test_assumptions Graph-enabled Dse cluster.
-  # @test_category dse:graph
-  #
-  def test_create_vertex_with_geospatial_properties
-    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
-
-    # Create the geo type instances we want to pass as params.
-    point = Point.new(98, 3)
-    line = LineString.new(Point.new(2, 5), Point.new(5, 2))
-    poly = Polygon.new(LineString.new(Point.new(0, 0),
-                                      Point.new(20, 0),
-                                      Point.new(26, 26),
-                                      Point.new(0, 26),
-                                      Point.new(0, 0)),
-                       LineString.new(Point.new(1, 1),
-                                      Point.new(1, 5),
-                                      Point.new(5, 5),
-                                      Point.new(5, 1),
-                                      Point.new(1, 1))
-                      )
-
-    # Create the vertex.
-    vertex = @@session.execute_graph("graph.addVertex(label, 'geo', 'loc', myloc, 'path', mypath, 'region', myregion)",
-                                   arguments: { myloc: point, mypath: line, myregion: poly }).first
-    @@session.execute_graph("g.V().hasLabel('geo').drop()")
-    assert_equal('POINT (98 3)', vertex['loc'].first.value)
-    assert_equal('LINESTRING (2 5, 5 2)', vertex['path'].first.value)
-    assert_equal('POLYGON ((0 0, 20 0, 26 26, 0 26, 0 0), (1 1, 1 5, 5 5, 5 1, 1 1))', vertex['region'].first.value)
   end
 
   # Test for retrieving multi-value vertex property metadata
@@ -769,4 +716,155 @@ class GraphTest < IntegrationTestCase
       result.as_path
     end
   end
+
+  # Test for creating and retrieving vertices with all graph datatypes
+  #
+  # test_can_create_vertex_with_all_datatypes tests that vertices can be inserted which have vertex properties with
+  # all the supported graph datatypes. It goes through each graph datatype, adding a vertex using each datatype as
+  # a vertex property. It then retrieves this vertex and verifies that the vertex property data is retrieved as
+  # expected.
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-197
+  # @expected_result Vertices should be created and retrieved with graph datatypes
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_can_create_vertex_with_all_datatypes
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    DatatypeUtils.graph_datatypes.each do |datatype|
+      input_value = DatatypeUtils.get_sample(datatype)
+      @@session.execute_graph("graph.addVertex(label, 'datatypes', '#{datatype}', input_value)",
+                              arguments: { input_value: input_value})
+      vertex = @@session.execute_graph("g.V().hasLabel('datatypes').has('#{datatype}')").first
+      returned_value =  vertex.properties[datatype].first.value
+
+      if input_value.is_a?(Numeric) || [true, false].include?(input_value) || datatype == 'blob' || datatype == 'text'
+        if input_value.class == ::BigDecimal
+          assert_equal input_value.to_f, returned_value
+        else
+          assert_equal input_value, returned_value
+        end
+      elsif datatype == 'duration'
+        assert_equal 'PT51H4M', returned_value
+      elsif datatype == 'inet'
+        assert_equal input_value, ::IPAddr.new(returned_value)
+      elsif datatype == 'timestamp'
+        assert_equal input_value.to_i, Time.parse(returned_value).to_i
+      elsif datatype == 'uuid'
+        assert_equal input_value, Cassandra::Uuid.new(returned_value)
+      elsif datatype == 'point'
+        assert_equal input_value, Dse::Geometry::Point.new(returned_value)
+      elsif datatype == 'linestring'
+        assert_equal input_value, Dse::Geometry::LineString.new(returned_value)
+      elsif datatype == 'polygon'
+        assert_equal input_value, Dse::Geometry::Polygon.new(returned_value)
+      else
+        flunk("Missing handling of '#{datatype}'")
+      end
+
+      @@session.execute_graph("g.V().hasLabel('datatypes').has('#{datatype}').drop()")
+    end
+  end
+
+  # Test for using a list as a graph query parameter
+  #
+  # test_can_use_list_as_parameter tests lists can be used as a parameter when inserting vertices using a graph query.
+  # It first creates a list of names to be used as the parameter. It then executes a graph statement that adds vertices
+  # using this constructed list of names as the parameter. It then retrieves these vertices and verifies that the
+  # parameters have been used properly.
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-190
+  # @expected_result Vertices should be created using a list as a parameter
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_can_use_list_as_parameter
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    characters = ['Mario', "Luigi", "Toad", "Bowser", "Peach", "Wario", "Waluigi"]
+    insert = "characters.each { character -> \n" +
+             "    graph.addVertex(label, 'character', 'characterName', character);\n" +
+             "}"
+
+    @@session.execute_graph(insert, arguments: {characters: characters})
+    results = @@session.execute_graph("g.V().hasLabel('character').values('characterName')")
+    assert_equal 7, results.size
+    retrieved_characters = results.map { |result| result.value }
+
+    assert_equal characters, retrieved_characters
+    @@session.execute_graph("g.V().hasLabel('character').drop()")
+  end
+
+  # Test for using a map as a graph query parameter
+  #
+  # test_can_use_map_as_parameter tests maps can be used as a parameter when inserting vertices using a graph query.
+  # It first creates a map of arguments to be used as the parameter. It then executes a graph statement that adds a
+  # vertex using this constructed map of arguments as the parameter. It then retrieves the vertex and verifies that the
+  # parameters have been used properly.
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-190
+  # @expected_result Vertices should be created using a map as a parameter
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_can_use_map_as_parameter
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    origin_properties = ['Galactic Republic', 'Jedi']
+    input_map = { name: 'Yoda', origin: 'unknown', origin_properties: origin_properties }
+
+    @@session.execute_graph("yoda = graph.addVertex(label, 'master', 'name', input_map.name);
+                             yoda.property('origin', input_map.origin, 'country', input_map.origin_properties[0],
+                             'descent', input_map.origin_properties[1])", arguments: {input_map: input_map})
+
+    vertex = @@session.execute_graph("g.V().has('master', 'name', 'Yoda')").first
+    meta_properties = ['origin', {'country' => 'Galactic Republic', 'descent' => 'Jedi'}]
+    validate_vertex(vertex, 'master', ['name', 'origin'], ['Yoda', 'unknown'], meta_properties)
+
+    @@session.execute_graph("g.V().has('master', 'name', 'Yoda').drop()")
+  end
+
+  # Test for running analytics queries against the analytics master
+  #
+  # test_run_analytics_on_master tests that graph statements run against an analytics source
+  # execute on a particular node rather than round-robin.
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-195
+  # @expected_result graph statements should execute consistently on the analytics master
+  #
+  def test_run_analytics_on_master
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+    skip('Spark tests are not operable right now')
+
+    # There's a good chance the analytics server isn't quite ready for us yet. So, run
+    # repeatedly until we get a result.
+    num_attempts = 0
+    while num_attempts < 10
+      begin
+        num_attempts += 1
+
+        @@session.execute_graph('g.V().count()', graph_source: 'a')
+        break
+      rescue => e
+        puts "Analytics query attempt #{num_attempts} failed: #{e}"
+        sleep 10
+      end
+    end
+
+    # Run a query three times and verify that we always run against the same node.
+    hosts = Set.new
+    3.times do
+      hosts << @@session.execute_graph('g.V().count()', graph_source: 'a').execution_info.hosts.last.ip
+    end
+    assert_equal 1, hosts.size
+  end
+
 end
