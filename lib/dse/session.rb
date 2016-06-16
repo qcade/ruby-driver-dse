@@ -13,6 +13,9 @@ module Dse
   # @see http://datastax.github.io/ruby-driver/api/cassandra/session Cassandra::Session
   class Session
     # @private
+    DEFAULT_GRAPH_TIMEOUT = 32
+
+    # @private
     def initialize(cassandra_session, graph_options, futures_factory)
       @cassandra_session = cassandra_session
       @graph_options = graph_options
@@ -50,7 +53,7 @@ module Dse
 
       graph_options = @graph_options.merge(graph_statement.options)
       options[:payload] = graph_options.as_payload
-      options[:timeout] = nil unless options[:timeout]
+      options[:timeout] = DEFAULT_GRAPH_TIMEOUT unless options[:timeout]
 
       if graph_options.analytics?
         @cassandra_session.execute_async('CALL DseClientTool.getAnalyticsGraphServer()').then do |rows|
