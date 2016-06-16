@@ -171,17 +171,15 @@ module Dse
       def serialize
         buffer = Cassandra::Protocol::CqlByteBuffer.new
 
-        # We can serialize according to our native platform, but it's just as easy to lock into an endian. We
-        # choose big-endian because the Cassandra protocol is big-endian and we definitely have all the methods
-        # we need to write out such values.
+        # We serialize in little-endian form.
 
-        buffer << "\x00"
+        buffer << "\x01"
 
         # This is a polygon.
-        buffer.append_int(3)
+        buffer.append([3].pack(Cassandra::Protocol::Formats::INT_FORMAT_LE))
 
         # Write out the count of how many rings we have.
-        buffer.append_int(@rings.size)
+        buffer.append([@rings.size].pack(Cassandra::Protocol::Formats::INT_FORMAT_LE))
 
         # Now write out the raw serialization of each ring (e.g. linestring).
         @rings.each do |ring|

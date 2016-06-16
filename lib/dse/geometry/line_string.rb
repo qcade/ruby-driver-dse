@@ -149,14 +149,12 @@ module Dse
       def serialize
         buffer = Cassandra::Protocol::CqlByteBuffer.new
 
-        # We can serialize according to our native platform, but it's just as easy to lock into an endian. We
-        # choose big-endian because the Cassandra protocol is big-endian and we definitely have all the methods
-        # we need to write out such values.
+        # We serialize in little-endian form.
 
-        buffer << "\x00"
+        buffer << "\x01"
 
         # This is a line-string.
-        buffer.append_int(2)
+        buffer.append([2].pack(Cassandra::Protocol::Formats::INT_FORMAT_LE))
 
         # Write out the count of how many points we have.
         serialize_raw(buffer)
@@ -168,7 +166,7 @@ module Dse
       # and other metadata)
       # @private
       def serialize_raw(buffer)
-        buffer.append_int(@points.size)
+        buffer.append([@points.size].pack(Cassandra::Protocol::Formats::INT_FORMAT_LE))
 
         # Now write out x and y for each point.
         @points.each do |point|
