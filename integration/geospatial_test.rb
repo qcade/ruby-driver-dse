@@ -25,14 +25,14 @@ class GeospatialTest < IntegrationTestCase
   #
   # test_can_insert_point_type tests that the driver can insert Point datatype and retrieve them. It first creates a
   # simple table which can store Point types. It then performs an insert on this table, creating a row with a simple
-  # Point. It then retrieves this point and makes sure all object data is correct. Note that this first Point will be in
-  # little-endian form as we are simply sending the Point info down the wire, where C* will create the point internally.
-  # The test then performs the same steps, except with a pre-defined Point object (in big-endian form), which is then
-  # passed along to C* in a prepared statement. Finally, it verifies that a Point can be constructed via its WKT form.
+  # Point. It then retrieves this point and makes sure all object data is correct. Note that this first Point will be
+  # created by DSE internally, as we're simply sending down the WKT down the wire. The test then performs the same
+  # steps, except with a pre-defined Point object, which is then passed along to DSE in a prepared statement. Finally,
+  # it verifies that a Point can be constructed via its WKT form.
   #
   # @since 1.0.0
   # @jira_ticket RUBY-197
-  # @expected_result Point objects should be inserted and properly retrieved in both endian forms, and WKT
+  # @expected_result Point objects should be inserted and properly retrieved in both WKT and WKB
   #
   # @test_category dse:geospatial
   #
@@ -41,7 +41,7 @@ class GeospatialTest < IntegrationTestCase
 
     @session.execute("CREATE TABLE points (k text PRIMARY KEY, v 'PointType')")
 
-    # point0, inserted via little-endian
+    # point0, inserted via WKT
     @session.execute("INSERT INTO points (k, v) VALUES ('point0', 'POINT (3.0 2.0)')")
 
     result = @session.execute('SELECT * FROM points').first
@@ -53,7 +53,7 @@ class GeospatialTest < IntegrationTestCase
     assert_equal 'POINT (3.0 2.0)', point.wkt
     assert_equal Dse::Geometry::Point.new(3.0, 2.0), point
 
-    # point1, inserted via big-endian
+    # point1, inserted via WKB
     test_point = Dse::Geometry::Point.new(38.0, 21.0)
     @session.execute('INSERT INTO points (k, v) VALUES (?, ?)', arguments: ['point1', test_point])
 
@@ -69,7 +69,7 @@ class GeospatialTest < IntegrationTestCase
     results = @session.execute('SELECT * FROM points')
     assert_equal 2, results.size
 
-    # point2, constructed via wkt
+    # point2, constructed via WKT
     test_point = Dse::Geometry::Point.new('POINT (30 10)')
     assert_equal 30.0, test_point.x
     assert_equal 10.0, test_point.y
@@ -329,17 +329,16 @@ class GeospatialTest < IntegrationTestCase
 
   # Test for inserting and querying a Line String
   #
-  # test_can_insert_line_string_type tests that the driver can insert Line String datatype and retrieve them. It first
-  # creates a simple table which can store Line String types. It then performs an insert on this table, creating a row
-  # with a simple Line String. It then retrieves this point and makes sure all object data is correct. Note that this
-  # first Line String will be in little-endian form as we are simply sending the Line String info down the wire, where
-  # C* will create the Line String internally. The test then performs the same steps, except with a pre-defined Line
-  # String object (in big-endian form), which is then passed along to C* in a prepared statement. Finally, it verifies
-  # that a Line String can be constructed via its WKT form.
+  # test_can_insert_line_string_type tests that the driver can insert LineString datatype and retrieve them. It first
+  # creates a simple table which can store LineString types. It then performs an insert on this table, creating a row
+  # with a simple LineString. It then retrieves this LineString and makes sure all object data is correct. Note that
+  # this first LineString will be created by DSE internally, as we're simply sending down the WKT down the wire. The
+  # test then performs the same steps, except with a pre-defined LineString object, which is then passed along to DSE
+  # in a prepared statement. Finally, it verifies that a LineString can be constructed via its WKT form.
   #
   # @since 1.0.0
   # @jira_ticket RUBY-197
-  # @expected_result Line String objects should be inserted and properly retrieved in both endian forms, and WKT
+  # @expected_result Line String objects should be inserted and properly retrieved in both WKT and WKB
   #
   # @test_category dse:geospatial
   #
@@ -349,7 +348,7 @@ class GeospatialTest < IntegrationTestCase
     @session.execute("CREATE TABLE line_strings (k text PRIMARY KEY, v 'LineStringType')")
     @session.execute("INSERT INTO line_strings (k, v) VALUES ('linestring0', 'LineString (0.0 0.0, 1.0 1.0)')")
 
-    # linestring0, inserted via little-endian
+    # linestring0, inserted via WKT
     points = [Dse::Geometry::Point.new(0.0, 0.0), Dse::Geometry::Point.new(1.0, 1.0)]
     result = @session.execute('SELECT * FROM line_strings').first
     assert_equal 'linestring0', result['k']
@@ -360,7 +359,7 @@ class GeospatialTest < IntegrationTestCase
     assert_equal 'LINESTRING (0.0 0.0, 1.0 1.0)', line_string.wkt
     assert_equal Dse::Geometry::LineString.new(*points), line_string
 
-    # linestring1, inserted via big-endian
+    # linestring1, inserted via WKB
     points = [Dse::Geometry::Point.new(2.0, 3.0), Dse::Geometry::Point.new(3.0, 4.0), Dse::Geometry::Point.new(4.0, 5.0)]
     test_line_string = Dse::Geometry::LineString.new(*points)
     @session.execute('INSERT INTO line_strings (k, v) VALUES (?, ?)', arguments: ['linestring1', test_line_string])
@@ -378,7 +377,7 @@ class GeospatialTest < IntegrationTestCase
     results = @session.execute('SELECT * FROM line_strings')
     assert_equal 2, results.size
 
-    # linestring2, constructed via wkt
+    # linestring2, constructed via WKT
     test_line_string = Dse::Geometry::LineString.new('LINESTRING (30 10, 10 30, 40 40)')
     assert_equal [Dse::Geometry::Point.new(30.0, 10.0), Dse::Geometry::Point.new(10.0, 30.0),
                   Dse::Geometry::Point.new(40.0, 40.0)], test_line_string.points
@@ -647,17 +646,16 @@ class GeospatialTest < IntegrationTestCase
 
   # Test for inserting and querying a Polygon
   #
-  # test_can_insert_polygon_type tests that the driver can insert the Polygon datatype and retrieve them. It first
-  # creates a simple table which can store Polygon types. It then performs an insert on this table, creating a row
-  # with a simple Polygon. It then retrieves this point and makes sure all object data is correct. Note that this
-  # first Polygon will be in little-endian form as we are simply sending the Polygon info down the wire, where
-  # C* will create the Polygon internally. The test then performs the same steps, except with a pre-defined Polygon
-  # object (in big-endian form), which is then passed along to C* in a prepared statement. Finally, it verifies that a
-  # Polygon can be constructed via its WKT form.
+  # test_can_insert_polygon_type tests that the driver can insert Polygon datatype and retrieve them. It first creates
+  # a simple table which can store Polygon types. It then performs an insert on this table, creating a row with a simple
+  # Polygon. It then retrieves this Polygon and makes sure all object data is correct. Note that this first Polygon
+  # will be created by DSE internally, as we're simply sending down the WKT down the wire. The test then performs the
+  # same steps, except with a pre-defined Polygon object, which is then passed along to DSE in a prepared statement.
+  # Finally, it verifies that a Polygon can be constructed via its WKT form.
   #
   # @since 1.0.0
   # @jira_ticket RUBY-197
-  # @expected_result Polygon objects should be inserted and properly retrieved in both endian forms, and WKT
+  # @expected_result Polygon objects should be inserted and properly retrieved in both WKT and WKB
   #
   # @test_category dse:geospatial
   #
@@ -668,7 +666,7 @@ class GeospatialTest < IntegrationTestCase
     @session.execute("INSERT INTO polygons (k, v) VALUES ('polygon0', 'POLYGON (
                       (0.0 0.0, 20.0 0.0, 25.0 25.0, 0.0 25.0, 0.0 0.0), (1.0 1.0, 2.0 2.0, 2.0 1.0, 1.0 1.0))')")
 
-    # polygon0, inserted via little-endian
+    # polygon0, inserted via WKT
     line_string0 = Dse::Geometry::LineString.new('LINESTRING (0.0 0.0, 20.0 0.0, 25.0 25.0, 0.0 25.0, 0.0 0.0)')
     line_string1 = Dse::Geometry::LineString.new('LINESTRING (1.0 1.0, 2.0 2.0, 2.0 1.0, 1.0 1.0)')
     result = @session.execute('SELECT * FROM polygons').first
@@ -682,9 +680,9 @@ class GeospatialTest < IntegrationTestCase
                  polygon.wkt
     assert_equal Dse::Geometry::Polygon.new(*[line_string0, line_string1]), polygon
 
-    # polygon1, inserted via big-endian
+    # polygon1, inserted via WKB
     line_string0 = Dse::Geometry::LineString.new('LINESTRING (0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0, 0.0 0.0)')
-    line_string1 = Dse::Geometry::LineString.new('LINESTRING (1.0 1.0, 9.0 1.0, 4.0 9.0, 1.0 1.0)')
+    line_string1 = Dse::Geometry::LineString.new('LINESTRING (1.0 1.0, 4.0 9.0, 9.0 1.0, 1.0 1.0)')
     test_polygon = Dse::Geometry::Polygon.new(*[line_string0, line_string1])
 
     insert = @session.prepare('INSERT INTO polygons (k, v) VALUES (?, ?)')
@@ -696,20 +694,20 @@ class GeospatialTest < IntegrationTestCase
     assert_equal line_string0, polygon.exterior_ring
     assert_equal [line_string1], polygon.interior_rings
     assert_match "Exterior ring: 0.0,0.0 to 10.0,0.0 to 10.0,10.0 to 0.0,10.0 to 0.0,0.0\nInterior rings:\
-\n    1.0,1.0 to 9.0,1.0 to 4.0,9.0 to 1.0,1.0", polygon.to_s
-    assert_equal 'POLYGON ((0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0, 0.0 0.0), (1.0 1.0, 9.0 1.0, 4.0 9.0, 1.0 1.0))',
+\n    1.0,1.0 to 4.0,9.0 to 9.0,1.0 to 1.0,1.0", polygon.to_s
+    assert_equal 'POLYGON ((0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0, 0.0 0.0), (1.0 1.0, 4.0 9.0, 9.0 1.0, 1.0 1.0))',
                  polygon.wkt
     assert_equal test_polygon, polygon
 
     results = @session.execute('SELECT * FROM polygons')
     assert_equal 2, results.size
 
-    # polygon2, constructed via wkt
+    # polygon2, constructed via WKT
     test_polygon2 = Dse::Geometry::Polygon.new('POLYGON ((0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0, 0.0 0.0),
-                                               (1.0 1.0, 9.0 1.0, 4.0 9.0, 1.0 1.0))')
+                                               (1.0 1.0, 4.0 9.0, 9.0 1.0, 1.0 1.0))')
     assert_equal line_string0, test_polygon2.exterior_ring
     assert_equal [line_string1], test_polygon2.interior_rings
-    assert_equal 'POLYGON ((0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0, 0.0 0.0), (1.0 1.0, 9.0 1.0, 4.0 9.0, 1.0 1.0))',
+    assert_equal 'POLYGON ((0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0, 0.0 0.0), (1.0 1.0, 4.0 9.0, 9.0 1.0, 1.0 1.0))',
                  test_polygon2.wkt
     assert_equal test_polygon, test_polygon2
   end
@@ -941,7 +939,7 @@ class GeospatialTest < IntegrationTestCase
     @session.execute("CREATE TABLE pk_test3 (k 'PolygonType' PRIMARY KEY, v int)")
     @session.execute("CREATE TABLE clustering_test3 (k0 text, k1 'PolygonType', v int, PRIMARY KEY (k0, k1))")
     test_polygon = Dse::Geometry::Polygon.new('POLYGON ((0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0, 0.0 0.0),
-                                               (1.0 1.0, 9.0 1.0, 4.0 9.0, 1.0 1.0))')
+                                               (1.0 1.0, 4.0 9.0, 9.0 1.0, 1.0 1.0))')
 
     # PK
     insert = @session.prepare('INSERT INTO pk_test3 (k, v) VALUES (?, ?)')
