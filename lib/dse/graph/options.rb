@@ -38,8 +38,7 @@ module Dse
         :graph_source,
         :graph_language,
         :graph_read_consistency,
-        :graph_write_consistency,
-        :request_timeout
+        :graph_write_consistency
       ].freeze
 
       # Create an Options object.
@@ -50,7 +49,6 @@ module Dse
         @real_options = options.select do |key, _|
           OPTION_NAMES.include?(key)
         end
-        @real_options['request-timeout'] = [options[:timeout] * 1000].pack("Q>") if options[:timeout]
       end
 
       OPTION_NAMES.each do |attr|
@@ -103,7 +101,7 @@ module Dse
         # where the keys are hyphenated (the way the server expects them).
         result = {}
         graph_options.each do |key, value|
-          result[key.to_s.tr('_', '-')] = value if value
+          result[key.to_s.tr!('_', '-')] = value if value
         end
         result
       end
@@ -111,7 +109,11 @@ module Dse
       # @private
       def eql?(other)
         other.is_a?(Options) && \
-          @real_options == other.instance_variable_get(:@real_options)
+          @real_options[:graph_name] == other.graph_name && \
+          @real_options[:graph_source] == other.graph_source && \
+          @real_options[:graph_language] == other.graph_language && \
+          @real_options[:graph_read_consistency] == other.graph_read_consistency && \
+          @real_options[:graph_write_consistency] == other.graph_write_consistency
       end
       alias == eql?
 
