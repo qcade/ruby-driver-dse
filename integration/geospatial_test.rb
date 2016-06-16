@@ -761,20 +761,56 @@ class GeospatialTest < IntegrationTestCase
     end
 
     # polygon with a Line String of 3 points is valid (DSE will insert the 4th point in WKT)
-    @session.execute("INSERT INTO polygons (k, v) VALUES ('polygon99', 'POLYGON ((0.0 0.0, 1.0 0.0, 1.0 1.0))')")
-    result = @session.execute("SELECT * FROM polygons WHERE k='polygon99'").first['v']
+    @session.execute("INSERT INTO polygons (k, v) VALUES ('polygon1', 'POLYGON ((0.0 0.0, 1.0 0.0, 1.0 1.0))')")
+    result = @session.execute("SELECT * FROM polygons WHERE k='polygon1'").first['v']
     assert_equal Dse::Geometry::LineString.new('LINESTRING (0.0 0.0, 1.0 0.0, 1.0 1.0, 0.0 0.0)'), result.exterior_ring
     assert_empty result.interior_rings
     assert_equal 'POLYGON ((0.0 0.0, 1.0 0.0, 1.0 1.0, 0.0 0.0))', result.wkt
 
-    # polygon with a Line String of 3 points is valid (DSE will ignore the 4th point in WKB)
+    # polygon with a Line String of 3 points is invalid (WKB)
     test_line = Dse::Geometry::LineString.new('LINESTRING (0.0 0.0, 1.0 0.0, 1.0 1.0)')
     test_polygon = Dse::Geometry::Polygon.new(*[test_line])
-    @session.execute("INSERT INTO polygons (k, v) VALUES ('polygon1', ?)", arguments: [test_polygon])
-    result = @session.execute("SELECT * FROM polygons WHERE k='polygon1'").first['v']
-    assert_equal test_line, result.exterior_ring
+    assert_raises(Cassandra::Errors::InvalidError) do
+      @session.execute("INSERT INTO polygons (k, v) VALUES ('polygon2', ?)", arguments: [test_polygon])
+    end
+
+    # polygon that doesn't close is valid (DSE will insert the closing point in WKT)
+    @session.execute("INSERT INTO polygons (k, v) VALUES ('polygon2',
+                     'POLYGON ((0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0))')"
+    )
+    result = @session.execute("SELECT * FROM polygons WHERE k='polygon2'").first['v']
+    assert_equal Dse::Geometry::LineString.new('LINESTRING (0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0, 0.0 0.0)'),
+                 result.exterior_ring
     assert_empty result.interior_rings
-    assert_equal 'POLYGON ((0.0 0.0, 1.0 0.0, 1.0 1.0))', result.wkt
+    assert_equal 'POLYGON ((0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0, 0.0 0.0))', result.wkt
+
+    # polygon that doesn't close is invalid (WKB)
+    test_line = Dse::Geometry::LineString.new('LINESTRING (0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0)')
+    test_polygon = Dse::Geometry::Polygon.new(*[test_line])
+    assert_raises(Cassandra::Errors::InvalidError) do
+      @session.execute("INSERT INTO polygons (k, v) VALUES ('polygon3', ?)", arguments: [test_polygon])
+    end
+
+    # polygon with incorrect ring directions is valid (DSE will reverse the ring directions in WKT)
+    @session.execute("INSERT INTO polygons (k, v) VALUES ('polygon3',
+                      'POLYGON ((0.0 0.0, 0.0 10.0, 10.0 10.0, 10.0 0.0, 0.0 0.0),
+                      (1.0 1.0, 9.0 1.0, 4.0 9.0, 1.0 1.0))')"
+    )
+    result = @session.execute("SELECT * FROM polygons WHERE k='polygon3'").first['v']
+    assert_equal Dse::Geometry::LineString.new('LINESTRING (0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0, 0.0 0.0)'),
+                 result.exterior_ring
+    assert_equal [Dse::Geometry::LineString.new('LINESTRING (1.0 1.0, 4.0 9.0, 9.0 1.0, 1.0 1.0)')],
+                 result.interior_rings
+    assert_equal 'POLYGON ((0.0 0.0, 10.0 0.0, 10.0 10.0, 0.0 10.0, 0.0 0.0), (1.0 1.0, 4.0 9.0, 9.0 1.0, 1.0 1.0))',
+                 result.wkt
+
+    # polygon with incorrect ring directions is invalid (WKB)
+    line_string0 = Dse::Geometry::LineString.new('LINESTRING (0.0 0.0, 0.0 10.0, 10.0 10.0, 10.0 0.0, 0.0 0.0)')
+    line_string1 = Dse::Geometry::LineString.new('LINESTRING (1.0 1.0, 9.0 1.0, 4.0 9.0, 1.0 1.0)')
+    test_polygon = Dse::Geometry::Polygon.new(*[line_string0, line_string1])
+    assert_raises(Cassandra::Errors::InvalidError) do
+      @session.execute("INSERT INTO polygons (k, v) VALUES ('polygon4', ?)", arguments: [test_polygon])
+    end
 
     # Null cases
     assert_raises(ArgumentError) do
@@ -798,21 +834,21 @@ class GeospatialTest < IntegrationTestCase
     end
 
     # Polygon that reach negative space is valid
-    test_polygon = Dse::Geometry::Polygon.new('POLYGON ((2.0 0.0, 2.0 2.0, -2.0 2.0, -2.0 -2.0, 2.0 -2.0))')
-    assert_equal 'POLYGON ((2.0 0.0, 2.0 2.0, -2.0 2.0, -2.0 -2.0, 2.0 -2.0))', test_polygon.wkt
+    test_polygon = Dse::Geometry::Polygon.new('POLYGON ((2.0 0.0, 2.0 2.0, -2.0 2.0, -2.0 -2.0, 2.0 -2.0, 2.0 0.0))')
+    assert_equal 'POLYGON ((2.0 0.0, 2.0 2.0, -2.0 2.0, -2.0 -2.0, 2.0 -2.0, 2.0 0.0))', test_polygon.wkt
 
     insert = @session.prepare('INSERT INTO polygons (k, v) VALUES (?, ?)')
-    @session.execute(insert, arguments: ['polygon2', test_polygon])
+    @session.execute(insert, arguments: ['polygon4', test_polygon])
 
     # Implicit UNSET
-    @session.execute(insert, arguments: {'k' => 'polygon2'})
-    assert_equal({"k"=>"polygon2", "v"=>test_polygon},
-                 @session.execute("SELECT * FROM polygons WHERE k='polygon2'").first)
+    @session.execute(insert, arguments: {'k' => 'polygon4'})
+    assert_equal({"k"=>"polygon4", "v"=>test_polygon},
+                 @session.execute("SELECT * FROM polygons WHERE k='polygon4'").first)
 
     # Explicit UNSET
-    @session.execute(insert, arguments: ['polygon2', Cassandra::NOT_SET])
-    assert_equal({"k"=>"polygon2", "v"=>test_polygon},
-                 @session.execute("SELECT * FROM polygons WHERE k='polygon2'").first)
+    @session.execute(insert, arguments: ['polygon4', Cassandra::NOT_SET])
+    assert_equal({"k"=>"polygon4", "v"=>test_polygon},
+                 @session.execute("SELECT * FROM polygons WHERE k='polygon4'").first)
 
     # Invalid UNSET
     assert_raises(ArgumentError) do
