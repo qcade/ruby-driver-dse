@@ -151,14 +151,12 @@ module Dse
       def serialize
         buffer = Cassandra::Protocol::CqlByteBuffer.new
 
-        # We can serialize according to our native platform, but it's just as easy to lock into an endian. We
-        # choose big-endian because the Cassandra protocol is big-endian and we definitely have all the methods
-        # we need to write out such values.
+        # Serialize little-endian.
 
-        buffer << "\x00"
+        buffer << "\x01"
 
         # This is a point.
-        buffer.append_int(1)
+        buffer.append([1].pack(Cassandra::Protocol::Formats::INT_FORMAT_LE))
 
         # Write out x and y.
         serialize_raw(buffer)
@@ -170,8 +168,8 @@ module Dse
       # and other metadata)
       # @private
       def serialize_raw(buffer)
-        buffer.append_double(@x)
-        buffer.append_double(@y)
+        buffer.append([@x].pack(Cassandra::Protocol::Formats::DOUBLE_FORMAT_LE))
+        buffer.append([@y].pack(Cassandra::Protocol::Formats::DOUBLE_FORMAT_LE))
       end
     end
   end
