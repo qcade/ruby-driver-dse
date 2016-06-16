@@ -23,4 +23,4 @@ build:
       fi
 
       # Run the tests
-      DSE_DIR=/home/jenkins/bdp-master bundle exec rake test
+      DSE_DIR=$CCM_INSTALL_DIR bundle exec rake test
