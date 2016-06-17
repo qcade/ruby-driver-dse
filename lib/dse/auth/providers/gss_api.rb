@@ -82,13 +82,13 @@ module Dse
           end
         end
 
-        # @param service [String] name of the kerberos service; typically 'dse'.
+        # @param service [String] name of the kerberos service; defaults to 'dse'.
         # @param host_resolver [Boolean, Object] (true) whether to use a host-resolver. By default,
         #        `Socket#getnameinfo` is used. To disable host-resolution, specify a `false` value. You may also
         #        provide a custom resolver, which is an object that implements the `resolve(host_ip)` method.
         # @param principal [String] (nil) The principal whose cached credentials are used to authenticate. Defaults
         #        to the first principal stored in the ticket cache.
-        def initialize(service, host_resolver = true, principal = nil)
+        def initialize(service = 'dse', host_resolver = true, principal = nil)
           raise NotImplementedError, "JRuby does not yet support the GssApi authenticator" if RUBY_ENGINE == 'jruby'
 
           @service = service
