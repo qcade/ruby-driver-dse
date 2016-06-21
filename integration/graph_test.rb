@@ -6,6 +6,7 @@
 
 require File.dirname(__FILE__) + '/integration_test_case.rb'
 require File.dirname(__FILE__) + '/datatype_utils.rb'
+require File.dirname(__FILE__) + '/ordered_loadbalancing_policy.rb'
 require 'set'
 
 include Dse::Geometry
@@ -266,6 +267,56 @@ class GraphTest < IntegrationTestCase
     end
 
     @@ccm_cluster.start_node('node1')
+  end
+
+  # Test for retrying idempotent statements on timeout
+  #
+  # test_graph_statement_idempotency_on_timeout tests that idempotent graph statements are retried automatically on the
+  # next host. It first blocks the first two hosts such that they are unreachable. It then attempts a simple g.V()
+  # graph statement and verifies that a Cassandra::Errors::TimeoutError is raised, and the next host is not tried. It
+  # then executes the same statement with idempotent explicitly set to false, verifying the same
+  # Cassandra::Errors::TimeoutError being raised. Finally executes the statement once more with idempotent: true and
+  # verifies that the statement executes successfully on another host.
+  #
+  # @expected_errors [Cassandra::Errors::TimeoutError] When a host is unavailable on a non-idempotent query
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-225
+  # @expected_result Idempotent queries should be retried on the next host automatically
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_graph_statement_idempotency_on_timeout
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    policy  = OrderedPolicy.new(Cassandra::LoadBalancing::Policies::RoundRobin.new)
+    cluster = Dse.cluster(graph_name: 'users', load_balancing_policy: policy)
+    session = cluster.connect
+
+
+    @@ccm_cluster.block_node('node1')
+    @@ccm_cluster.block_node('node2')
+
+    assert_raises(Cassandra::Errors::TimeoutError) do
+      session.execute_graph('g.V()', timeout: 5)
+    end
+
+    assert_raises(Cassandra::Errors::TimeoutError) do
+      session.execute_graph('g.V()', timeout: 5, idempotent: false)
+    end
+
+    Retry.with_attempts(5, Cassandra::Errors::InvalidError) do
+      info = session.execute_graph('g.V()', timeout:5, idempotent: true).execution_info
+      assert_equal 3, info.hosts.size
+      assert_equal '127.0.0.1', info.hosts[0].ip.to_s
+      assert_equal '127.0.0.2', info.hosts[1].ip.to_s
+    end
+  ensure
+    if CCM.dse_version >= '5.0.0'
+      @@ccm_cluster.unblock_nodes
+      cluster.close
+    end
   end
 
   # Test for using graph options in session and queries
