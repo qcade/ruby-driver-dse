@@ -18,7 +18,7 @@
 
 require File.dirname(__FILE__) + '/../integration_test_case.rb'
 
-class AuthenticationTest < IntegrationTestCase
+class DseAuthTest < IntegrationTestCase
   def self.before_suite
     unless CCM.dse_version < '5.0.0'
       super
@@ -27,8 +27,10 @@ class AuthenticationTest < IntegrationTestCase
   end
 
   def self.after_suite
-    @@ccm_cluster && @@ccm_cluster.disable_dse_authentication
-    super
+    unless CCM.dse_version < '5.0.0'
+      @@ccm_cluster && @@ccm_cluster.disable_dse_authentication
+      super
+    end
   end
 
   # Test for basic successful authentication
@@ -56,8 +58,11 @@ class AuthenticationTest < IntegrationTestCase
         username: @@username,
         password: @@password
       )
-
       refute_nil cluster
+
+      session = cluster.connect
+      results = session.execute('select count(*) from system.local')
+      assert_equal 1, results.first['count']
     ensure
       cluster.close
     end
