@@ -437,6 +437,11 @@ module CCM extend self
         options[:password] = @password
       end
 
+      if @ads_server && !@username
+        ENV['KRB5CCNAME']='cassandra.cache'
+        options[:auth_provider] = Dse::Auth::Providers::GssApi.new('dse', true, 'cassandra@DATASTAX.COM')
+      end
+
       if @server_cert
         options[:server_cert] = @server_cert
       end
@@ -679,6 +684,114 @@ module CCM extend self
       start
     end
 
+    def enable_kerberos
+      stop
+
+      # Start the embedded-ads jar
+      ads_dir = '/home/jenkins'
+      @ads_server = IO.popen("java -jar #{ads_dir}/embedded-ads.jar -k")
+      puts 'The embedded-ads server has been started for Kerberos'
+      sleep(5)
+
+      # Set env vars
+      ads_config_dir = `echo $WORKSPACE`.chomp
+      dse_keytab = "#{ads_config_dir}/dse.keytab"
+      krb5_config = "#{ads_config_dir}/krb5.conf"
+      ENV['DSE_KEYTAB'] = dse_keytab
+      ENV['KRB5_CONFIG'] = krb5_config
+
+      # Generate the user files
+      `kinit -t #{ads_config_dir}/dseuser.keytab -k dseuser@DATASTAX.COM -c dseuser.cache`
+      `kinit -t #{ads_config_dir}/cassandra.keytab -k cassandra@DATASTAX.COM -c cassandra.cache`
+
+      # Update DSE configs
+      @ccm.exec('updatedseconf',
+                "kerberos_options.keytab: #{dse_keytab}",
+                'kerberos_options.service_principal: dse/_HOST@DATASTAX.COM',
+                'kerberos_options.http_principal: dse/_HOST@DATASTAX.COM',
+                'kerberos_options.qop: auth'
+      )
+
+      if CCM.dse_version < '5.0.0'
+        @ccm.exec('updateconf', 'authenticator: com.datastax.bdp.cassandra.auth.KerberosAuthenticator')
+      else
+        @ccm.exec('updateconf', 'authenticator: com.datastax.bdp.cassandra.auth.DseAuthenticator')
+        @ccm.exec('updatedseconf',
+                  'authentication_options.enabled: true',
+                  'authentication_options.default_scheme: kerberos',
+                  'authentication_options.scheme_permissions: true',
+                  'authentication_options.allow_digest_with_kerberos: true',
+                  'authentication_options.transitional_mode: disabled'
+        )
+      end
+
+      # Start DSE with Kerberos
+      start("-Djava.security.krb5.conf=#{krb5_config}")
+    end
+
+    def disable_kerberos
+      stop
+      Process.kill('INT', @ads_server.pid)
+      Process.waitpid(@ads_server.pid)
+      puts 'The embedded-ads server with Kerberos has been stopped'
+      @ads_server = nil
+
+      @ccm.exec('updateconf', 'authenticator: AllowAllAuthenticator')
+      @ccm.exec('updatedseconf', 'authentication_options.enabled: false') unless CCM.dse_version < '5.0.0'
+      start
+    end
+
+    def enable_ldap
+      stop
+
+      @username = 'cassandra'
+      @password = 'cassandra'
+
+      # Start the embedded-ads jar
+      ads_dir = '/home/jenkins'
+      @ads_server = IO.popen("java -jar #{ads_dir}/embedded-ads.jar")
+      puts 'The embedded-ads server has been started for LDAP'
+      sleep(5)
+
+      # Update DSE configs
+      @ccm.exec('updatedseconf',
+                'ldap_options.search_dn: uid=cassandra,ou=users,dc=datastax,dc=com',
+                'ldap_options.search_password: cassandra',
+                'ldap_options.server_host: 127.0.0.1',
+                'ldap_options.server_port: 10389',
+                'ldap_options.user_search_base: ou=users,dc=datastax,dc=com',
+                'ldap_options.user_search_filter: (uid={0})'
+      )
+
+      if CCM.dse_version < '5.0.0'
+        @ccm.exec('updateconf', 'authenticator: com.datastax.bdp.cassandra.auth.LdapAuthenticator')
+      else
+        @ccm.exec('updateconf', 'authenticator: com.datastax.bdp.cassandra.auth.DseAuthenticator')
+        @ccm.exec('updatedseconf',
+                  'authentication_options.enabled: true',
+                  'authentication_options.default_scheme: ldap'
+        )
+      end
+
+      # Start DSE
+      start
+
+      [@username, @password]
+    end
+
+    def disable_ldap
+      stop
+      Process.kill('INT', @ads_server.pid)
+      Process.waitpid(@ads_server.pid)
+      puts 'The embedded-ads server with LDAP has been stopped'
+      @ads_server = nil
+
+      @ccm.exec('updateconf', 'authenticator: AllowAllAuthenticator')
+      @ccm.exec('updatedseconf', 'authentication_options.enabled: false') unless CCM.dse_version < '5.0.0'
+      @username = @password = nil
+      start
+    end
+
     def enable_ssl
       stop
       ssl_root = File.expand_path(File.dirname(__FILE__) + '/../support/ssl')
@@ -862,7 +975,6 @@ module CCM extend self
   @raw_version = nil
   @cassandra_version = nil
   @dse = false
-  @dse_version = nil
 
   def parse_version
     @raw_version ||= begin

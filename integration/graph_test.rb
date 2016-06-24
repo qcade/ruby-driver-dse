@@ -306,7 +306,7 @@ class GraphTest < IntegrationTestCase
       session.execute_graph('g.V()', timeout: 5, idempotent: false)
     end
 
-    Retry.with_attempts(5, Cassandra::Errors::InvalidError) do
+    Retry.with_attempts(5, Cassandra::Errors::InvalidError, Cassandra::Errors::NoHostsAvailable) do
       info = session.execute_graph('g.V()', timeout:5, idempotent: true).execution_info
       assert_equal 3, info.hosts.size
       assert_equal '127.0.0.1', info.hosts[0].ip.to_s
