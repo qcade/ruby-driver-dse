@@ -2,11 +2,10 @@ PATH
   remote: .
   specs:
     dse-driver (1.0.0.rc.1)
-      cassandra-driver (~> 3.0.1)
+      cassandra-driver (~> 3.0.2)
 
 GEM
   remote: https://rubygems.org/
-  remote: https://datastax.artifactoryonline.com/datastax/api/gems/cassandra-driver/
   specs:
     ansi (1.5.0)
     aruba (0.13.0)
@@ -18,9 +17,9 @@ GEM
       thor (~> 0.19)
     ast (2.2.0)
     builder (3.2.2)
-    cassandra-driver (3.0.1)
+    cassandra-driver (3.0.2)
       ione (~> 1.2)
-    cassandra-driver (3.0.1-java)
+    cassandra-driver (3.0.2-java)
       ione (~> 1.2)
     childprocess (0.5.9)
       ffi (~> 1.0, >= 1.0.11)
@@ -104,7 +103,7 @@ DEPENDENCIES
   ansi
   aruba
   bundler (~> 1.6)
-  cassandra-driver (= 3.0.1)!
+  cassandra-driver (= 3.0.2)
   cliver
   cucumber
   dse-driver!

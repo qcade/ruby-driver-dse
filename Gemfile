@@ -8,7 +8,7 @@ gem 'rake-compiler', group: [:development, :test]
 gem 'cliver',        group: [:development, :test]
 
 # This is temporary until the driver is available on RubyGems.
-gem 'cassandra-driver', '=3.0.1', source: 'https://datastax.artifactoryonline.com/datastax/api/gems/cassandra-driver/'
+gem 'cassandra-driver', '=3.0.2'
 
 group :development do
   platforms :mri_19 do
