@@ -17,6 +17,10 @@ puts "Dse Driver Version: #{Dse::VERSION}"
 puts "Cassandra Driver Version: #{Cassandra::VERSION}"
 ```
 
+## Installation
+The driver is named dse-driver on rubygems.org and can easily be installed with Bundler or the gem program. It will
+download the appropriate Cassandra driver as well.
+
 ## Graph
 Executing graph statements is similar to issuing CQL queries in the Cassandra
 driver. The difference is that while the Cassandra driver returns rows of results from
