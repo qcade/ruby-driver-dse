@@ -1,6 +1,6 @@
 title:    Driver for DataStax Enterprise
 summary:  A pure Ruby client for DataStax Enterprise
-#homepage: http://datastax.github.io/ruby-driver/
+homepage: http://docs.datastax.com/en/developer/ruby-driver-dse/1.0
 sections:
   - title:     Features
     prefix:    /features
