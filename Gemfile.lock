@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     dse-driver (1.0.0.rc.1)
-      cassandra-driver (~> 3.0.2)
+      cassandra-driver (= 3.0.2)
 
 GEM
   remote: https://rubygems.org/
