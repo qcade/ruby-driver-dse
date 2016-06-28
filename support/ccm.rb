@@ -16,6 +16,8 @@
 # limitations under the License.
 #++
 
+require 'net/http'
+require 'uri'
 require 'fileutils'
 require 'logger'
 require 'cliver'
@@ -1011,10 +1013,16 @@ module CCM extend self
     setup_cluster(no_dc, no_nodes_per_dc, true)
   end
 
-  def setup_cluster(no_dc = 1, no_nodes_per_dc = 3, enable_graph = false)
+  def setup_spark_cluster(no_dc = 1, no_nodes_per_dc = 2)
+    setup_cluster(no_dc, no_nodes_per_dc, true, true)
+  end
+
+  def setup_cluster(no_dc = 1, no_nodes_per_dc = 3, enable_graph = false, enable_spark = false)
     parse_version
 
-    if enable_graph
+    if enable_spark
+      cluster_name = 'ruby-driver-dse_spark' + "-#{@raw_version}" + '-test-cluster'
+    elsif enable_graph
       cluster_name = 'ruby-driver-dse_graph' + "-#{@raw_version}" + '-test-cluster'
     else
       cluster_name = 'ruby-driver-' + "#{@dse ? 'dse' : 'cassandra'}" + "-#{@raw_version}" + '-test-cluster'
@@ -1024,7 +1032,7 @@ module CCM extend self
       unless @current_cluster.nodes_count == (no_dc * no_nodes_per_dc) && @current_cluster.datacenters_count == no_dc
         @current_cluster.stop
         remove_cluster(@current_cluster.name)
-        create_cluster(cluster_name, @raw_version, no_dc, no_nodes_per_dc, enable_graph)
+        create_cluster(cluster_name, @raw_version, no_dc, no_nodes_per_dc, enable_graph, enable_spark)
       end
 
       @current_cluster.start
@@ -1037,11 +1045,11 @@ module CCM extend self
       unless @current_cluster.nodes_count == (no_dc * no_nodes_per_dc) && @current_cluster.datacenters_count == no_dc
         @current_cluster.stop
         remove_cluster(@current_cluster.name)
-        create_cluster(cluster_name, @raw_version, no_dc, no_nodes_per_dc, enable_graph)
+        create_cluster(cluster_name, @raw_version, no_dc, no_nodes_per_dc, enable_graph, enable_spark)
       end
     else
       @current_cluster && @current_cluster.stop
-      create_cluster(cluster_name, @raw_version, no_dc, no_nodes_per_dc, enable_graph)
+      create_cluster(cluster_name, @raw_version, no_dc, no_nodes_per_dc, enable_graph, enable_spark)
     end
 
     @current_cluster.start
@@ -1053,8 +1061,6 @@ module CCM extend self
   def ccm
     @ccm ||= begin
       Runner.new(ccm_script, {
-                 'CCM_MAX_HEAP_SIZE' => '256M',
-                 'CCM_HEAP_NEWSIZE'  => '64M',
                  'MALLOC_ARENA_MAX'  => '1'},
                  PrintingNotifier.new($stderr))
     end
@@ -1104,7 +1110,7 @@ module CCM extend self
     nil
   end
 
-  def create_cluster(name, version, datacenters, nodes_per_datacenter, enable_graph)
+  def create_cluster(name, version, datacenters, nodes_per_datacenter, enable_graph, enable_spark)
     nodes = Array.new(datacenters, nodes_per_datacenter).join(':')
 
     if @dse && version.start_with?('5.0')
@@ -1135,7 +1141,7 @@ module CCM extend self
       config << 'file_cache_size_in_mb: 0'
     end
 
-    config << 'native_transport_max_threads: 1'
+    # config << 'native_transport_max_threads: 1'
     config << 'rpc_min_threads: 1'
     config << 'rpc_max_threads: 1'
     config << 'concurrent_reads: 2'
@@ -1163,14 +1169,63 @@ module CCM extend self
     ccm.exec('updateconf', *config)
     ccm.exec('populate', '-n', nodes, '-i', '127.0.0.')
 
-    if enable_graph
+    if enable_spark
       ccm.exec('setworkload', 'graph,spark')
+    elsif enable_graph
+      ccm.exec('setworkload', 'graph')
     end
 
     clusters << @current_cluster = Cluster.new(name, ccm, firewall, nodes_per_datacenter * datacenters, datacenters,
                                                [], @dse)
 
+    if enable_spark
+      configure_spark(nodes_per_datacenter)
+    end
+
     nil
+  end
+
+  def configure_spark(num_nodes)
+    @current_cluster.start_node('node1')
+
+    start = Time.now
+    loop do
+      begin
+        s = TCPSocket.new('127.0.0.1', 7080)
+        s.close
+        break
+      rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+        elapsed_time = Time.now - start
+        if elapsed_time > 60
+          raise RuntimeError, 'Spark master did not come up after 60 seconds'
+        end
+        puts "Spark master not ready yet after #{elapsed_time} seconds"
+        sleep(5)
+      end
+    end
+
+    begin
+      cluster = Dse.cluster
+      session = cluster.connect
+      statement = "ALTER KEYSPACE dse_leases WITH REPLICATION = {'class': 'NetworkTopologyStrategy', 'GraphAnalytics': '#{num_nodes}'}"
+      session.execute(statement)
+    ensure
+      cluster.close
+    end
+
+    @current_cluster.start
+
+    start = Time.now
+    loop do
+      uri = URI.parse('http://127.0.0.1:7080/')
+      response_body = Net::HTTP.get_response(uri).body
+      workers_up = response_body.match(/Alive Workers:.*(\d+)<\/li>/)[1].to_i
+      break if workers_up == num_nodes
+      if Time.now - start > 120
+        raise RuntimeError, "Spark workers did not come up after 120 seconds. Currently have: #{workers_up}"
+      end
+      sleep(2)
+    end
   end
 
   def update_conf
