@@ -13,6 +13,7 @@ class GeospatialTest < IntegrationTestCase
       @@ccm_cluster.setup_schema("CREATE KEYSPACE simplex WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}")
 
       @cluster = Dse.cluster
+      @listener = SchemaChangeListener.new(@cluster)
       @session = @cluster.connect('simplex')
     end
   end
@@ -290,7 +291,7 @@ class GeospatialTest < IntegrationTestCase
     # Secondary index
     @session.execute("CREATE TABLE index_test (k int PRIMARY KEY, v frozen<map<'PointType', 'PointType'>>)")
     @session.execute("CREATE INDEX v_index ON index_test (full(v))")
-    sleep(2)
+    @listener.wait_for_index('simplex', 'index_test', 'v_index')
 
     assert @cluster.keyspace('simplex').table('index_test').has_index?('v_index')
     index = @cluster.keyspace('simplex').table('index_test').index('v_index')
@@ -304,7 +305,7 @@ class GeospatialTest < IntegrationTestCase
                       PRIMARY KEY (k, v0))")
     @session.execute("CREATE MATERIALIZED VIEW mv1 AS SELECT v0, v1 FROM mv_test WHERE v0 IS NOT NULL AND v1 IS NOT NULL
                       PRIMARY KEY ((k, v0), v1)")
-    sleep(2)
+    @listener.wait_for_materialized_view('simplex', 'mv1')
 
     assert @cluster.keyspace('simplex').has_materialized_view?('mv1')
     mv_meta = @cluster.keyspace('simplex').materialized_view('mv1')
@@ -607,7 +608,7 @@ class GeospatialTest < IntegrationTestCase
     # Secondary index
     @session.execute("CREATE TABLE index_test2 (k int PRIMARY KEY, v frozen<map<'LineStringType', 'LineStringType'>>)")
     @session.execute("CREATE INDEX v_index ON index_test2 (full(v))")
-    sleep(2)
+    @listener.wait_for_index('simplex', 'index_test2', 'v_index')
 
     assert @cluster.keyspace('simplex').table('index_test2').has_index?('v_index')
     index = @cluster.keyspace('simplex').table('index_test2').index('v_index')
@@ -621,7 +622,7 @@ class GeospatialTest < IntegrationTestCase
                       PRIMARY KEY (k, v0))")
     @session.execute("CREATE MATERIALIZED VIEW mv2 AS SELECT v0, v1 FROM mv_test2 WHERE v0 IS NOT NULL AND v1 IS NOT NULL
                       PRIMARY KEY ((k, v0), v1)")
-    sleep(2)
+    @listener.wait_for_materialized_view('simplex', 'mv2')
 
     assert @cluster.keyspace('simplex').has_materialized_view?('mv2')
     mv_meta = @cluster.keyspace('simplex').materialized_view('mv2')
@@ -976,7 +977,7 @@ class GeospatialTest < IntegrationTestCase
     # Secondary index
     @session.execute("CREATE TABLE index_test3 (k int PRIMARY KEY, v frozen<map<'PolygonType', 'PolygonType'>>)")
     @session.execute("CREATE INDEX v_index ON index_test3 (full(v))")
-    sleep(2)
+    @listener.wait_for_index('simplex', 'index_test3', 'v_index')
 
     assert @cluster.keyspace('simplex').table('index_test3').has_index?('v_index')
     index = @cluster.keyspace('simplex').table('index_test3').index('v_index')
@@ -990,7 +991,7 @@ class GeospatialTest < IntegrationTestCase
                       PRIMARY KEY (k, v0))")
     @session.execute("CREATE MATERIALIZED VIEW mv3 AS SELECT v0, v1 FROM mv_test3 WHERE v0 IS NOT NULL AND v1 IS NOT NULL
                       PRIMARY KEY ((k, v0), v1)")
-    sleep(2)
+    @listener.wait_for_materialized_view('simplex', 'mv3')
 
     assert @cluster.keyspace('simplex').has_materialized_view?('mv3')
     mv_meta = @cluster.keyspace('simplex').materialized_view('mv3')

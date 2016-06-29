@@ -1113,7 +1113,7 @@ module CCM extend self
   def create_cluster(name, version, datacenters, nodes_per_datacenter, enable_graph, enable_spark)
     nodes = Array.new(datacenters, nodes_per_datacenter).join(':')
 
-    if @dse && version.start_with?('5.0')
+    if @dse && ENV['DSE_DIR'] && !ENV['DSE_DIR'].empty?
       ccm.exec('create', name, '--dse', '--install-dir', ENV['DSE_DIR'])
     else
       create_args = ['-v', version, name]
