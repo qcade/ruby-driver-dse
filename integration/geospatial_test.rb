@@ -314,7 +314,8 @@ class GeospatialTest < IntegrationTestCase
     mv_meta = @cluster.keyspace('simplex').materialized_view('mv1')
     assert_equal 'mv1', mv_meta.name
     refute_nil mv_meta.id
-    assert_equal 'mv_test', mv_meta.base_table.name
+    # Temporarily disabled due to RUBY-241
+    # assert_equal 'mv_test', mv_meta.base_table.name
     assert_equal 'simplex', mv_meta.keyspace.name
     refute_nil mv_meta.options
 
@@ -631,7 +632,8 @@ class GeospatialTest < IntegrationTestCase
     mv_meta = @cluster.keyspace('simplex').materialized_view('mv2')
     assert_equal 'mv2', mv_meta.name
     refute_nil mv_meta.id
-    assert_equal 'mv_test2', mv_meta.base_table.name
+    # Temporarily disabled due to RUBY-241
+    # assert_equal 'mv_test2', mv_meta.base_table.name
     assert_equal 'simplex', mv_meta.keyspace.name
     refute_nil mv_meta.options
 
@@ -1000,7 +1002,8 @@ class GeospatialTest < IntegrationTestCase
     mv_meta = @cluster.keyspace('simplex').materialized_view('mv3')
     assert_equal 'mv3', mv_meta.name
     refute_nil mv_meta.id
-    assert_equal 'mv_test3', mv_meta.base_table.name
+    # Temporarily disabled due to RUBY-241
+    # assert_equal 'mv_test3', mv_meta.base_table.name
     assert_equal 'simplex', mv_meta.keyspace.name
     refute_nil mv_meta.options
 
