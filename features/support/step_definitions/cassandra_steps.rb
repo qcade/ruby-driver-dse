@@ -1,5 +1,12 @@
 # encoding: utf-8
 
+#--
+#      Copyright (C) 2016 DataStax Inc.
+#
+#      This software can be used solely with DataStax Enterprise. Please consult the license at
+#      http://www.datastax.com/terms/datastax-dse-driver-license-terms
+#++
+
 Given(/^a running cassandra cluster$/) do
   step "a running cassandra cluster in 1 datacenter with 3 nodes in each"
 end
