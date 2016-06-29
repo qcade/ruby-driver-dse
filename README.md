@@ -1,5 +1,7 @@
 # Ruby Driver for DataStax Enterprise
 
+*NOTE: The DataStax Enterprise Ruby Driver can be used solely with DataStax Enterprise. Please consult [the license](http://www.datastax.com/terms/datastax-dse-driver-license-terms).*
+
 This driver exposes the following features of DSE 5.0:
 
 * <a href="#graph">Graph</a>
@@ -319,3 +321,8 @@ rs.each do |row|
   puts "WKT: #{row['layout'].wkt}"
 end
 ```
+
+## License
+Copyright (C) 2016 DataStax Inc.
+
+The full license terms are available at http://www.datastax.com/terms/datastax-dse-driver-license-terms
