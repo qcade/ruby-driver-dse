@@ -1,3 +1,9 @@
+master
+
+Features:
+
+Bug Fixes:
+
 1.0.0 rc2
 
 Bug Fixes:
