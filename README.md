@@ -2,6 +2,13 @@
 
 *NOTE: The DataStax Enterprise Ruby Driver can be used solely with DataStax Enterprise. Please consult [the license](http://www.datastax.com/terms/datastax-dse-driver-license-terms).*
 
+This is the documentation for the DataStax Enterprise Ruby Driver for DSE. This
+driver is built on top of the [DataStax Ruby driver for Apache Cassandra](http://docs.datastax.com/en/latest-ruby-driver/ruby-driver/whatsNew.html)
+and enhanced for the adaptive data management and mixed workload capabilities
+provided by DSE. Therefore a lot of the underlying concepts are the same and 
+to keep this documentation focused we will be linking to the relevant sections
+of the DataStax Ruby driver for Apache Cassandra documentation where necessary.
+
 This driver exposes the following features of DSE 5.0:
 
 * <a href="#graph">Graph</a>
