@@ -681,13 +681,13 @@ module CCM extend self
       stop
 
       # Start the embedded-ads jar
-      ads_dir = '/home/jenkins'
-      @ads_server = IO.popen("java -jar #{ads_dir}/embedded-ads.jar -k")
+      ads_dir = ENV['ADS_DIR'] || '/home/jenkins'
+      @ads_server = IO.popen("java -jar #{ads_dir}/embedded-ads.jar -k --confdir #{ENV['WORKSPACE']}")
       puts 'The embedded-ads server has been started for Kerberos'
       sleep(5)
 
       # Set env vars
-      ads_config_dir = `echo $WORKSPACE`.chomp
+      ads_config_dir = ENV['WORKSPACE']
       dse_keytab = "#{ads_config_dir}/dse.keytab"
       krb5_config = "#{ads_config_dir}/krb5.conf"
       ENV['DSE_KEYTAB'] = dse_keytab

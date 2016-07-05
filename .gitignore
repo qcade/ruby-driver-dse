@@ -11,5 +11,6 @@
 /docs
 /.sass-cache
 /lib/*.bundle
+/lib/*.jar
 /venv
 /node_modules

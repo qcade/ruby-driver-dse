@@ -8,7 +8,13 @@
 #++
 
 require 'json'
-require 'gss_api_context' unless RUBY_ENGINE == 'jruby'
+
+if RUBY_ENGINE == 'jruby'
+  require 'challenge_evaluator'
+else
+  require 'gss_api_context'
+end
+
 require 'cassandra'
 
 module Dse

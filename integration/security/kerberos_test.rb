@@ -11,17 +11,13 @@ require File.dirname(__FILE__) + '/../integration_test_case.rb'
 
 class KerberosTest < IntegrationTestCase
   def self.before_suite
-    unless RUBY_ENGINE == 'jruby'
-      super
-      @@ccm_cluster.enable_kerberos
-    end
+    super
+    @@ccm_cluster.enable_kerberos
   end
 
   def self.after_suite
-    unless RUBY_ENGINE == 'jruby'
-      @@ccm_cluster && @@ccm_cluster.disable_kerberos
-      super
-    end
+    @@ccm_cluster && @@ccm_cluster.disable_kerberos
+    super
   end
 
   # Test for basic successful kerberos authentication
@@ -40,7 +36,6 @@ class KerberosTest < IntegrationTestCase
   # @test_category dse:auth
   #
   def test_can_authenticate_via_kerberos
-    skip('Kerberos is not yet available on JRuby') if RUBY_ENGINE == 'jruby'
 
     # Principal explicitly defined
     ENV['KRB5CCNAME']='cassandra.cache'
@@ -82,8 +77,6 @@ class KerberosTest < IntegrationTestCase
   # @test_category dse:auth
   #
   def test_raise_error_on_invalid_kerberos_auth
-    skip('Kerberos is not yet available on JRuby') if RUBY_ENGINE == 'jruby'
-
     # No provider specified
     assert_raises(Cassandra::Errors::AuthenticationError) do
       Dse.cluster
