@@ -123,14 +123,14 @@ module Dse
         end
 
         # @param service [String] name of the kerberos service; defaults to 'dse'.
-        # @param host_resolver [Boolean, Object] (true) whether to use a host-resolver. By default,
+        # @param host_resolver [Boolean, Object] whether to use a host-resolver. By default,
         #        `Socket#getnameinfo` is used. To disable host-resolution, specify a `false` value. You may also
         #        provide a custom resolver, which is an object that implements the `resolve(host_ip)` method.
-        # @param principal [String] (nil) The principal whose cached credentials are used to authenticate. Defaults
+        # @param principal [String] The principal whose cached credentials are used to authenticate. Defaults
         #        to the first principal stored in the ticket cache.
-        # @param ticket_cache [String] (nil) The ticket cache containing the cached credential we seek. Defaults
-        #        *on Linux* to /tmp/krb5cc_<uid> (where uid is the numeric uid of the user running the client program).
-        #        In MRI only, the KRB5CCNAME environment variable supercedes this. On Mac, the default is a symbolic
+        # @param ticket_cache [String] The ticket cache containing the cached credential we seek. Defaults
+        #        *on Linux* to /tmp/krb5cc_&lt;uid&gt; (where uid is the numeric uid of the user running the client program).
+        #        In MRI only, the `KRB5CCNAME` environment variable supercedes this. On Mac, the default is a symbolic
         #        reference to a ticket-cache server process.
         def initialize(service = 'dse', host_resolver = true, principal = nil, ticket_cache = nil)
           @service = service
