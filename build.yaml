@@ -14,6 +14,7 @@ build:
       # Set the Java paths (for CCM)
       export JAVA_HOME=$CCM_JAVA_HOME
       export PATH=$JAVA_HOME/bin:$PATH
+      export JRUBY_OPTS="-J-Djava.security.krb5.conf=$WORKSPACE/krb5.conf"
 
       # Define Cassandra or DSE runtime
       if [ "$CCM_IS_DSE" == "true" ]; then

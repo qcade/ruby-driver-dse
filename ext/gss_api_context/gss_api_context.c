@@ -38,15 +38,16 @@ rb_context_alloc(VALUE klass)
 }
 
 static VALUE
-rb_context_initialize(VALUE self, VALUE _service, VALUE _principal)
+rb_context_initialize(VALUE self, VALUE _service, VALUE _principal, VALUE _ticket_cache)
 {
     const char* service = StringValuePtr(_service);
     const char* principal = _principal == Qnil ? NULL : StringValuePtr(_principal);
+    const char* ticket_cache = _ticket_cache == Qnil ? NULL : StringValuePtr(_ticket_cache);
 
     long int gss_flags = GSS_C_MUTUAL_FLAG | GSS_C_SEQUENCE_FLAG;
     gss_client_state* state = get_state(self);
 
-    authenticate_gss_client_init(service, principal, gss_flags, NULL, GSS_C_NO_OID, state);
+    authenticate_gss_client_init(service, principal, ticket_cache, gss_flags, NULL, GSS_C_NO_OID, state);
 
     return self;
 }
@@ -117,7 +118,7 @@ Init_gss_api_context()
   currentContainer = rb_define_module_under(currentContainer, "Providers");
   currentContainer = rb_define_class_under(currentContainer, "GssApiContext", rb_cObject);
   rb_define_alloc_func(currentContainer, rb_context_alloc);
-  rb_define_method(currentContainer, "initialize", rb_context_initialize, 2);
+  rb_define_method(currentContainer, "initialize", rb_context_initialize, 3);
   rb_define_method(currentContainer, "step", rb_context_step, 1);
   rb_define_method(currentContainer, "response", rb_context_response, 0);
   rb_define_method(currentContainer, "wrap", rb_context_wrap, 1);
