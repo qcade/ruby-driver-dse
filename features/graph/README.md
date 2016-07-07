@@ -135,6 +135,10 @@ options = Dse::Graph::Options.new
 options.graph_name = 'mygraph'
 results = session.execute_graph('g.V().count()', graph_options: options)
 
+# Set an "expert" option for which we don't have accessor methods.
+# NOTE: Such options are not part of the public api and may change in a future release of DSE.
+options.set('super-cool-option', true)
+
 # Change the graph options on the cluster to alter subsequent query behavior.
 # Switch to the analytics source in this case.
 cluster.graph_options.graph_source = 'a'

@@ -31,8 +31,8 @@ module Dse
     class Options
       # @private
       DEFAULT_GRAPH_OPTIONS = {
-        graph_source: 'g',
-        graph_language: 'gremlin-groovy'
+        'graph-source' => 'g',
+        'graph-language' => 'gremlin-groovy'
       }.freeze
 
       # @private
@@ -46,27 +46,41 @@ module Dse
       ].freeze
 
       # Create an Options object.
-      # @param options [Hash] optional hash containing graph options. Keys are attribute name symbols
-      #    (e.g. :graph_name). Unset options will inherit from the defaults.
+      # @param options [Hash] optional hash containing graph options. Keys are option name symbols
+      #    (e.g. `:graph_name`). Unset options will inherit from the defaults.
       def initialize(options = {})
         # Filter the given options to only those we care about.
-        @real_options = options.select do |key, _|
-          OPTION_NAMES.include?(key)
+        @real_options = {}
+        return unless options
+
+        options.each do |k, v|
+          set(k, v) if OPTION_NAMES.include?(k)
         end
+
         @real_options['request-timeout'] = [options[:timeout] * 1000].pack("Q>") if options[:timeout]
       end
 
       OPTION_NAMES.each do |attr|
         define_method(attr.to_s) do
-          @real_options[attr]
+          @real_options[stringify(attr)]
         end
 
         define_method("#{attr}=") do |value|
-          @real_options[attr] = value
+          @real_options[stringify(attr)] = value
         end
       end
 
-      # Merge another Options object with this one to produce a new merged Options object.
+      # Set an option in this {Options} object. This is primarily used to set "expert" options that
+      # are not part of the public api and thus may change over time.
+      # @param key [String, Symbol] option to set.
+      # @param value [String] value to set for the option.
+      # @return [Options] self, thus allowing method chaining.
+      def set(key, value)
+        @real_options[stringify(key)] = value if value
+        self
+      end
+
+      # Merge another {Options} object with this one to produce a new merged {Options} object.
       # The "other" object's values take precedence over this one.
       # @param other [Options] Options object to merge with this one.
       # @return [Options] new Options object with the merged options.
@@ -79,6 +93,11 @@ module Dse
         result.instance_variable_set(:@real_options,
                                      @real_options.merge(other.instance_variable_get(:@real_options)))
         result
+      end
+
+      # @private
+      def stringify(attr)
+        attr.to_s.tr('_', '-')
       end
 
       # @private
@@ -96,19 +115,13 @@ module Dse
 
       # @return whether or not this options object is configured for the analytics graph source.
       def analytics?
-        @real_options[:graph_source] == 'a'
+        @real_options['graph-source'] == 'a'
       end
 
       # @private
       def as_payload
-        graph_options = DEFAULT_GRAPH_OPTIONS.merge(@real_options)
-        # Transform the graph options (which use symbols with _'s) into a hash with string keys,
-        # where the keys are hyphenated (the way the server expects them).
-        result = {}
-        graph_options.each do |key, value|
-          result[key.to_s.tr('_', '-')] = value if value
-        end
-        result
+        # Merge in real options with defaults to get a final payload
+        DEFAULT_GRAPH_OPTIONS.merge(@real_options)
       end
 
       # @private

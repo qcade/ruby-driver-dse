@@ -9,6 +9,7 @@
 
 require 'spec_helper'
 
+# noinspection RubyStringKeysInHashInspection
 module Dse
   module Graph
     describe Options do
@@ -18,7 +19,7 @@ module Dse
       # we need to test that those methods (getters/setters) work properly. That list may change over time,
       # and we want the test to auto-adjust, so we iterate over the option-names. We could avoid using eval
       # in the test and instead do calls like options.send(attr), but I wanted to emulate *exactly* what a
-      # use would type when calling these methods. So, we construct the calls as strings and eval them.
+      # user would type when calling these methods. So, we construct the calls as strings and eval them.
       Dse::Graph::Options::OPTION_NAMES.each do |attr|
         # rubocop:disable Lint/Eval
         it "should allow setting/getting #{attr}" do
@@ -46,6 +47,7 @@ module Dse
         expect(init_options.graph_language).to be_nil
         expect(init_options.graph_read_consistency).to be_nil
         expect(init_options.graph_write_consistency).to be_nil
+        expect(init_options.as_payload).to_not include('junky', :junky)
       end
 
       context :merge do
@@ -119,11 +121,29 @@ module Dse
         end
       end
 
+      context :set do
+        it 'should ignore nil value options' do
+          options.set('graph-name', nil)
+          expect(options.graph_name).to be_nil
+        end
+
+        it 'should set standard options' do
+          options.set('graph-name', 'mygraph')
+          expect(options.graph_name).to eq('mygraph')
+        end
+
+        it 'should set arbitrary options' do
+          options.set(:super_cool, 'value')
+          expect(options.as_payload).to include({'super-cool' => 'value'})
+        end
+      end
+
       context :as_payload do
         it 'should produce a payload only with non-nil entries' do
           expect(options.as_payload).to eq('graph-source' => 'g',
                                            'graph-language' => 'gremlin-groovy')
         end
+
         it 'should include option attributes mixed with defaults' do
           options.graph_name = 'mygraph'
           options.graph_source = 'a'
