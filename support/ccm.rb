@@ -431,8 +431,7 @@ module CCM extend self
       end
 
       if @ads_server && !@username
-        ENV['KRB5CCNAME']='cassandra.cache'
-        options[:auth_provider] = Dse::Auth::Providers::GssApi.new('dse', true, 'cassandra@DATASTAX.COM')
+        options[:auth_provider] = Dse::Auth::Providers::GssApi.new('dse', true, 'cassandra@DATASTAX.COM', 'cassandra.cache')
       end
 
       if @server_cert

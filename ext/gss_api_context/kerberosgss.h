@@ -53,7 +53,7 @@ typedef struct {
 } gss_server_state;
 
 void authenticate_gss_client_init(
-    const char* service, const char* principal, long int gss_flags,
+    const char* service, const char* principal, const char* ticket_cache, long int gss_flags,
     gss_server_state* delegatestate, gss_OID mech_oid, gss_client_state* state
 );
 int authenticate_gss_client_clean(

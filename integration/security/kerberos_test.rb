@@ -38,8 +38,7 @@ class KerberosTest < IntegrationTestCase
   def test_can_authenticate_via_kerberos
 
     # Principal explicitly defined
-    ENV['KRB5CCNAME']='cassandra.cache'
-    provider = Dse::Auth::Providers::GssApi.new('dse', true, 'cassandra@DATASTAX.COM')
+    provider = Dse::Auth::Providers::GssApi.new('dse', true, 'cassandra@DATASTAX.COM', 'cassandra.cache')
     cluster = Dse.cluster(auth_provider: provider)
     session = cluster.connect
 
@@ -47,8 +46,8 @@ class KerberosTest < IntegrationTestCase
     results = session.execute('select count(*) from system.local')
     assert_equal 1, results.first['count']
 
-    # Principal from latest cache
-    provider = Dse::Auth::Providers::GssApi.new('dse', true)
+    # Default principal from cache
+    provider = Dse::Auth::Providers::GssApi.new('dse', true, nil, 'cassandra.cache')
     cluster = Dse.cluster(auth_provider: provider)
     session = cluster.connect
 
@@ -83,27 +82,25 @@ class KerberosTest < IntegrationTestCase
     end
 
     # Invalid service
-    ENV['KRB5CCNAME']='cassandra.cache'
-    provider = Dse::Auth::Providers::GssApi.new('badprovider', true, 'cassandra@DATASTAX.COM')
+    provider = Dse::Auth::Providers::GssApi.new('badprovider', true, 'cassandra@DATASTAX.COM', 'cassandra.cache')
     assert_raises(Cassandra::Errors::NoHostsAvailable) do
       Dse.cluster(auth_provider: provider)
     end
 
     # # No host resolution
-    # provider = Dse::Auth::Providers::GssApi.new('dse', false, 'cassandra@DATASTAX.COM')
+    # provider = Dse::Auth::Providers::GssApi.new('dse', false, 'cassandra@DATASTAX.COM', 'cassandra.cache')
     # assert_raises(Cassandra::Errors::NoHostsAvailable) do
     #   Dse.cluster(auth_provider: provider)
     # end
 
     # Invalid principal
-    provider = Dse::Auth::Providers::GssApi.new('dse', true, 'baduser@DATASTAX.COM')
-    assert_raises(Cassandra::Errors::NoHostsAvailable) do
+    provider = Dse::Auth::Providers::GssApi.new('dse', true, 'baduser@DATASTAX.COM', 'cassandra.cache')
+    assert_raises(Cassandra::Errors::AuthenticationError) do
       Dse.cluster(auth_provider: provider)
     end
 
     # Unauthorized principal
-    ENV['KRB5CCNAME']='dseuser.cache'
-    provider = Dse::Auth::Providers::GssApi.new('dse', true, 'dseuser@DATASTAX.COM')
+    provider = Dse::Auth::Providers::GssApi.new('dse', true, 'dseuser@DATASTAX.COM', 'dseuser.cache')
     assert_raises(Cassandra::Errors::AuthenticationError) do
       Dse.cluster(auth_provider: provider)
     end

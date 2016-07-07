@@ -36,11 +36,12 @@ module Dse
           # Copied from kerberosgss.h
           AUTH_GSS_COMPLETE = 1
 
-          def initialize(authentication_class, host, service, principal)
+          def initialize(authentication_class, host, service, principal, ticket_cache)
             @authentication_class = authentication_class
             @host = host
             @service = service
             @principal = principal
+            @ticket_cache = ticket_cache
 
             if RUBY_ENGINE == 'jruby'
               @sasl_client = javax.security.sasl.Sasl.createSaslClient(['GSSAPI'],
@@ -50,13 +51,24 @@ module Dse
                                                                        {javax.security.sasl.Sasl::SERVER_AUTH => 'true',
                                                                         javax.security.sasl.Sasl::QOP => 'auth'},
                                                                        nil)
-              config = Dse::Auth::Providers::ChallengeEvaluator.make_configuration(principal)
+              config = Dse::Auth::Providers::ChallengeEvaluator.make_configuration(principal, ticket_cache)
               login = javax.security.auth.login.LoginContext.new('DseClient', nil, nil, config)
               login.login
               @subject = login.getSubject
             else
-              @gss_context = GssApiContext.new("#{@service}@#{@host}", @principal)
+              @gss_context = GssApiContext.new("#{@service}@#{@host}", @principal, @ticket_cache)
             end
+          rescue => e
+            raise Cassandra::Errors::AuthenticationError.new(
+                "Failed to authenticate: #{e.message}",
+                nil,
+                nil,
+                nil,
+                nil,
+                nil,
+                nil,
+                :one,
+                0)
           end
 
           def initial_response
@@ -116,7 +128,11 @@ module Dse
         #        provide a custom resolver, which is an object that implements the `resolve(host_ip)` method.
         # @param principal [String] (nil) The principal whose cached credentials are used to authenticate. Defaults
         #        to the first principal stored in the ticket cache.
-        def initialize(service = 'dse', host_resolver = true, principal = nil)
+        # @param ticket_cache [String] (nil) The ticket cache containing the cached credential we seek. Defaults
+        #        *on Linux* to /tmp/krb5cc_<uid> (where uid is the numeric uid of the user running the client program).
+        #        In MRI only, the KRB5CCNAME environment variable supercedes this. On Mac, the default is a symbolic
+        #        reference to a ticket-cache server process.
+        def initialize(service = 'dse', host_resolver = true, principal = nil, ticket_cache = nil)
           @service = service
           @host_resolver = case host_resolver
                            when false
@@ -129,11 +145,13 @@ module Dse
           Cassandra::Util.assert_responds_to(:resolve, @host_resolver,
                                              'invalid host_resolver: it must have the :resolve method')
           @principal = principal
+          @ticket_cache = ticket_cache
         end
 
         # @private
         def create_authenticator(authentication_class, host)
-          Authenticator.new(authentication_class, @host_resolver.resolve(host.ip.to_s), @service, @principal)
+          Authenticator.new(authentication_class, @host_resolver.resolve(host.ip.to_s),
+                            @service, @principal, @ticket_cache)
         end
       end
     end

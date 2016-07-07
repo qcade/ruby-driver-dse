@@ -113,7 +113,7 @@ static void copy_challenge_to_token(const char* challenge, int challenge_len, gs
 }
 
 void authenticate_gss_client_init(
-    const char* service, const char* principal, long int gss_flags,
+    const char* service, const char* principal, const char* ticket_cache, long int gss_flags,
     gss_server_state* delegatestate, gss_OID mech_oid, gss_client_state* state
 )
 {
@@ -142,6 +142,13 @@ void authenticate_gss_client_init(
         raise_gss_error(maj_stat, min_stat);
     }
 
+    if (ticket_cache && *ticket_cache) {
+        maj_stat = gss_krb5_ccache_name(&min_stat, ticket_cache, NULL);
+        if (GSS_ERROR(maj_stat)) {
+            raise_gss_error(maj_stat, min_stat);
+        }
+    }
+
     // Use the delegate credentials if they exist
     if (delegatestate && delegatestate->client_creds != GSS_C_NO_CREDENTIAL) {
         state->client_creds = delegatestate->client_creds;
@@ -158,7 +165,6 @@ void authenticate_gss_client_init(
         if (GSS_ERROR(maj_stat)) {
             raise_gss_error(maj_stat, min_stat);
         }
-
         maj_stat = gss_acquire_cred(
             &min_stat, name, GSS_C_INDEFINITE, GSS_C_NO_OID_SET,
             GSS_C_INITIATE, &state->client_creds, NULL, NULL

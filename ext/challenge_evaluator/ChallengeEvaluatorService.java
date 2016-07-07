@@ -67,9 +67,10 @@ public class ChallengeEvaluatorService implements BasicLibraryService
         }
 
         @JRubyMethod(name="make_configuration", module=true)
-        public static IRubyObject makeConfiguration(ThreadContext context, IRubyObject self, IRubyObject principalRuby)
+        public static IRubyObject makeConfiguration(ThreadContext context, IRubyObject self, IRubyObject principalRuby, IRubyObject ticketCacheRuby)
         {
             final String principal = (principalRuby instanceof RubyNil) ? null : principalRuby.convertToString().toString();
+            final String ticketCache = (ticketCacheRuby instanceof RubyNil) ? null : ticketCacheRuby.convertToString().toString();
             Configuration config = new Configuration() {
                 @Override
                 public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
@@ -77,8 +78,12 @@ public class ChallengeEvaluatorService implements BasicLibraryService
                     if (principal != null && !principal.isEmpty()) {
                         options.put("principal", principal);
                     }
+                    if (ticketCache != null && !ticketCache.isEmpty()) {
+                        options.put("ticketCache", ticketCache);
+                    }
                     options.put("useTicketCache", "true");
                     options.put("renewTGT", "true");
+                    options.put("doNotPrompt", "true");
 
                     return new AppConfigurationEntry[]{
                             new AppConfigurationEntry("com.sun.security.auth.module.Krb5LoginModule",
