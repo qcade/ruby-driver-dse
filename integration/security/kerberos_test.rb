@@ -104,5 +104,11 @@ class KerberosTest < IntegrationTestCase
     assert_raises(Cassandra::Errors::AuthenticationError) do
       Dse.cluster(auth_provider: provider)
     end
+
+    # Non-existent cache
+    provider = Dse::Auth::Providers::GssApi.new('dse', true, 'cassandra@DATASTAX.COM', 'bad.cache')
+    assert_raises(Cassandra::Errors::AuthenticationError) do
+      Dse.cluster(auth_provider: provider)
+    end
   end
 end
