@@ -86,13 +86,7 @@ class KerberosTest < IntegrationTestCase
     assert_raises(Cassandra::Errors::NoHostsAvailable) do
       Dse.cluster(auth_provider: provider)
     end
-
-    # # No host resolution
-    # provider = Dse::Auth::Providers::GssApi.new('dse', false, 'cassandra@DATASTAX.COM', 'cassandra.cache')
-    # assert_raises(Cassandra::Errors::NoHostsAvailable) do
-    #   Dse.cluster(auth_provider: provider)
-    # end
-
+    
     # Invalid principal
     provider = Dse::Auth::Providers::GssApi.new('dse', true, 'baduser@DATASTAX.COM', 'cassandra.cache')
     assert_raises(Cassandra::Errors::AuthenticationError) do
