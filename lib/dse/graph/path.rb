@@ -35,7 +35,6 @@ module Dse
 
       # @private
       def hash
-        # id's are unique among graph objects, so we only need to hash on the id for safely adding to a hash/set.
         @hash ||= begin
           h = 17
           h = 31 * h + @labels.hash
