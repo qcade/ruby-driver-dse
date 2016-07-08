@@ -60,15 +60,16 @@ module Dse
             end
           rescue => e
             raise Cassandra::Errors::AuthenticationError.new(
-                "Failed to authenticate: #{e.message}",
-                nil,
-                nil,
-                nil,
-                nil,
-                nil,
-                nil,
-                :one,
-                0)
+              "Failed to authenticate: #{e.message}",
+              nil,
+              nil,
+              nil,
+              nil,
+              nil,
+              nil,
+              :one,
+              0
+            )
           end
 
           def initial_response
@@ -129,9 +130,9 @@ module Dse
         # @param principal [String] The principal whose cached credentials are used to authenticate. Defaults
         #        to the first principal stored in the ticket cache.
         # @param ticket_cache [String] The ticket cache containing the cached credential we seek. Defaults
-        #        *on Linux* to /tmp/krb5cc_&lt;uid&gt; (where uid is the numeric uid of the user running the client program).
-        #        In MRI only, the `KRB5CCNAME` environment variable supercedes this. On Mac, the default is a symbolic
-        #        reference to a ticket-cache server process.
+        #        *on Linux* to /tmp/krb5cc_&lt;uid&gt; (where uid is the numeric uid of the user running the
+        #        client program). In MRI only, the `KRB5CCNAME` environment variable supercedes this. On Mac,
+        #        the default is a symbolic reference to a ticket-cache server process.
         def initialize(service = 'dse', host_resolver = true, principal = nil, ticket_cache = nil)
           @service = service
           @host_resolver = case host_resolver

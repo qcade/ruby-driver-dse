@@ -46,7 +46,7 @@ module Dse
       end
 
       context 'accessors' do
-        let (:duration) { Duration.new(0, 0, 0, 0) }
+        let(:duration) { Duration.new(0, 0, 0, 0) }
 
         it 'should coerce days properly' do
           duration.days = '3'
