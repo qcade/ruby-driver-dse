@@ -11,13 +11,36 @@ module Dse
   module Graph
     # Represents a duration of time, corresponding to the Duration datatype in DSE Graph.
     class Duration
-      attr_reader :days, :hours, :minutes, :seconds
+      # Days in duration of time.  May be negative. Is internally coerced to an integer,
+      # so a value being assigned need not be an `Integer` itself.
+      # @return [Integer] days in duration of time.
+      attr_reader :days
+
+      # Hours in duration of time.  May be negative. Is internally coerced to an integer,
+      # so a value being assigned need not be an `Integer` itself.
+      # @return [Integer] hours in duration of time.
+      attr_reader :hours
+
+      # Minutes in duration of time.  May be negative. Is internally coerced to an integer,
+      # so a value being assigned need not be an `Integer` itself.
+      # @return [Integer] minutes in duration of time.
+      attr_reader :minutes
+
+      # Seconds in duration of time.  May be negative. Is internally coerced to an float,
+      # so a value being assigned need not be an `Float` itself.
+      # @return [Float] seconds in duration of time.
+      attr_reader :seconds
 
       # @private
       # We expect a string of the form PnDTnHnMn.nS, where n's are positive or negative integers, and where
       # components may be missing (e.g. PT7.8S is valid)
       PAT = /^P((?<days>-?\d+)D)?T((?<hours>-?\d+)H)?((?<minutes>-?\d+)M)?((?<seconds>-?[0-9.]+)S)?$/
 
+      # Create a {Duration} object. All arguments are internally coerced to desired types.
+      # @param days [Integer] number of days in the time-frame. May be negative.
+      # @param hours [Integer] number of hours in the time-frame. May be negative.
+      # @param minutes [Integer] number of minutes in the time-frame. May be negative.
+      # @param seconds [Float] number of seconds in the time-frame. May be negative.
       def initialize(days, hours, minutes, seconds)
         @days = days.to_i
         @hours = hours.to_i
@@ -41,6 +64,9 @@ module Dse
         @seconds = seconds.to_f
       end
 
+      # Parse a duration string from DSE Graph and construct a {Duration} object
+      # @param duration [String] duration string from DSE Graph.
+      # @raise [ArgumentError] if the duration string fails to parse.
       def self.from_dse(duration)
         parse_result = PAT.match(duration.to_s)
         raise(ArgumentError,

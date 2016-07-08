@@ -151,6 +151,34 @@ results = session.execute_graph('g.V().count()')
 puts "Number of vertices: #{results.first.value}"
 ```
 
+### Duration Graph Type ###
+DSE Graph supports several [datatypes](
+http://docs.datastax.com/en/latest-dse/datastax_enterprise/graph/reference/refDSEGraphDataTypes.html)
+for properties. The *Duration* type represents a duration of time. When DSE Graph returns properties of this type,
+the string representation is non-trivial and requires parsing in order for the user to really gain any information from it.
+
+The driver includes a helper class to parse such responses from DSE graph as well as to send such values in bound
+paramters in requests:
+
+```ruby
+# Create a Duration property in the schema called 'runtime' and declare that 'process' vertices can have this property.
+session.execute_graph(
+    "schema.propertyKey('runtime').Duration().ifNotExists().create();
+      schema.propertyKey('name').Text().ifNotExists().create();
+      schema.vertexLabel('process').properties('name', 'runtime').ifNotExists().create()")
+
+# We want to record that a process ran for 1 hour, 2 minutes, 3.5 seconds.
+runtime = Dse::Graph::Duration.new(0, 1, 2, 3.5)
+session.execute_graph(
+    "graph.addVertex(label, 'process', 'name', 'calculator', 'runtime', my_runtime);",
+    arguments: {'my_runtime' => runtime})
+
+# Now retrieve the vertex. Assume this is the only vertex in the graph for simplicity. 
+v = session.execute_graph('g.V()').first
+runtime = Dse::Graph::Duration.from_dse(v['runtime'].first.value)
+puts "#{runtime.hours} hours, #{runtime.minutes} minutes, #{runtime.seconds} seconds"
+```
+
 ### Miscellaneous Features ###
 There are a number of other features in the api to make development easier.
 
