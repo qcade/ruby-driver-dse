@@ -57,7 +57,7 @@ module Dse
           set(k, v) if OPTION_NAMES.include?(k)
         end
 
-        @real_options['request-timeout'] = [options[:timeout] * 1000].pack("Q>") if options[:timeout]
+        @real_options['request-timeout'] = [options[:timeout] * 1000].pack('Q>') if options[:timeout]
       end
 
       OPTION_NAMES.each do |attr|
@@ -133,7 +133,6 @@ module Dse
 
       # @private
       def hash
-        # id's are unique among graph objects, so we only need to hash on the id for safely adding to a hash/set.
         @hash ||= 31 * 17 + @real_options.hash
       end
 
