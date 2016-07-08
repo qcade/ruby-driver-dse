@@ -134,7 +134,7 @@ module Dse
 
         it 'should set arbitrary options' do
           options.set(:super_cool, 'value')
-          expect(options.as_payload).to include({'super-cool' => 'value'})
+          expect(options.as_payload).to include('super-cool' => 'value')
         end
       end
 
@@ -153,8 +153,8 @@ module Dse
         end
 
         it 'should include request-timeout option if there is a timeout' do
-          options = Dse::Graph::Options.new({ timeout: 7 })
-          expect(options.as_payload).to eq('request-timeout' => [7000].pack("Q>"),
+          options = Dse::Graph::Options.new(timeout: 7)
+          expect(options.as_payload).to eq('request-timeout' => [7000].pack('Q>'),
                                            'graph-source' => 'g',
                                            'graph-language' => 'gremlin-groovy')
         end

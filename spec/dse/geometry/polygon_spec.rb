@@ -123,8 +123,7 @@ module Dse
                                             Point.new(10.0, 1.0),
                                             Point.new(10.0, 10.0),
                                             Point.new(1.0, 10.0),
-                                            Point.new(1.0, 1.0)
-                                           ))).to eq(test_polygon)
+                                            Point.new(1.0, 1.0)))).to eq(test_polygon)
           expect(test_polygon.interior_rings).to be_empty
         end
 
