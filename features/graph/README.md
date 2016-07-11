@@ -143,7 +143,7 @@ session.execute_graph(
 
 # Now retrieve the vertex. Assume this is the only vertex in the graph for simplicity. 
 v = session.execute_graph('g.V()').first
-runtime = Dse::Graph::Duration.from_dse(v['runtime'].first.value)
+runtime = Dse::Graph::Duration.parse(v['runtime'].first.value)
 puts "#{runtime.hours} hours, #{runtime.minutes} minutes, #{runtime.seconds} seconds"
 ```
 

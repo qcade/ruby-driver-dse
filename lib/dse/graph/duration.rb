@@ -67,7 +67,7 @@ module Dse
       # Parse a duration string from DSE Graph and construct a {Duration} object
       # @param duration [String] duration string from DSE Graph.
       # @raise [ArgumentError] if the duration string fails to parse.
-      def self.from_dse(duration)
+      def self.parse(duration)
         parse_result = PAT.match(duration.to_s)
         raise(ArgumentError,
               "Failed to parse '#{duration}': expected format PnDTnHnMn.nS with integer n" \

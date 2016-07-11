@@ -73,31 +73,31 @@ module Dse
         end
       end
 
-      context :from_dse do
+      context :parse do
         it 'should error out if string from DSE is not recognized' do
           expect do
-            Duration.from_dse(nil)
+            Duration.parse(nil)
           end.to raise_error(ArgumentError)
 
           expect do
-            Duration.from_dse(3.5)
+            Duration.parse(3.5)
           end.to raise_error(ArgumentError)
 
           expect do
-            Duration.from_dse('P')
+            Duration.parse('P')
           end.to raise_error(ArgumentError)
         end
 
         it 'should handle fully specified positive durations' do
-          expect(Duration.from_dse('P2DT3H4M5.6S')).to eq(Duration.new(2, 3, 4, 5.6))
+          expect(Duration.parse('P2DT3H4M5.6S')).to eq(Duration.new(2, 3, 4, 5.6))
         end
 
         it 'should handle fully specified negative durations' do
-          expect(Duration.from_dse('P-2DT-3H-4M-5.6S')).to eq(Duration.new(-2, -3, -4, -5.6))
+          expect(Duration.parse('P-2DT-3H-4M-5.6S')).to eq(Duration.new(-2, -3, -4, -5.6))
         end
 
         it 'should handle partially specified durations' do
-          expect(Duration.from_dse('PT-5S')).to eq(Duration.new(0, 0, 0, -5))
+          expect(Duration.parse('PT-5S')).to eq(Duration.new(0, 0, 0, -5))
         end
       end
     end
