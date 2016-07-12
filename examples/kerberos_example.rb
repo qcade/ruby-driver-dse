@@ -13,6 +13,7 @@ require 'dse'
 
 # Create a provider for the 'dse' service and have it use the first ticket in the ticket cache for authentication
 # with nodes, which have hostname entries in the Kerberos server. All of the assignments below are equivalent:
+provider = Dse::Auth::Providers::GssApi.new
 provider = Dse::Auth::Providers::GssApi.new('dse')
 provider = Dse::Auth::Providers::GssApi.new('dse', true)
 provider = Dse::Auth::Providers::GssApi.new('dse', true, nil)
