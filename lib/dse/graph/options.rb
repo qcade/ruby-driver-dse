@@ -29,6 +29,9 @@ module Dse
 
     # Options for DSE Graph queries
     class Options
+      # @return [Numeric] the timeout for graph requests
+      attr_reader :timeout
+
       # @private
       DEFAULT_GRAPH_OPTIONS = {
         'graph-source' => 'g',
@@ -41,8 +44,7 @@ module Dse
         :graph_source,
         :graph_language,
         :graph_read_consistency,
-        :graph_write_consistency,
-        :request_timeout
+        :graph_write_consistency
       ].freeze
 
       # Create an Options object.
@@ -57,7 +59,7 @@ module Dse
           set(k, v) if OPTION_NAMES.include?(k)
         end
 
-        @real_options['request-timeout'] = [options[:timeout] * 1000].pack('Q>') if options[:timeout]
+        set_timeout(options[:timeout])
       end
 
       OPTION_NAMES.each do |attr|
@@ -68,6 +70,17 @@ module Dse
         define_method("#{attr}=") do |value|
           @real_options[stringify(attr)] = value
         end
+      end
+
+      # @private
+      def timeout=(val)
+        set_timeout(val)
+      end
+
+      # @private
+      def set_timeout(new_timeout)
+        @timeout = new_timeout
+        @real_options['request-timeout'] = [@timeout * 1000].pack('Q>') if @timeout
       end
 
       # Set an option in this {Options} object. This is primarily used to set "expert" options that
@@ -143,7 +156,8 @@ module Dse
         "@graph_source=#{@real_options[:graph_source].inspect}, " \
         "@graph_language=#{@real_options[:graph_language].inspect}, " \
         "@graph_read_consistency=#{@real_options[:graph_read_consistency].inspect}, " \
-        "@graph_write_consistency=#{@real_options[:graph_write_consistency].inspect}>"
+        "@graph_write_consistency=#{@real_options[:graph_write_consistency].inspect}, " \
+        "@timeout=#{@timeout.inspect}>"
       end
     end
   end
