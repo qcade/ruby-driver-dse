@@ -17,7 +17,7 @@ class SparkTest < IntegrationTestCase
     else
       @@ccm_cluster = CCM.setup_spark_cluster(1, 2)
 
-      @@cluster = Dse.cluster(timeout: 32)
+      @@cluster = Dse.cluster
       @@session = @@cluster.connect
       create_graph(@@session, 'spark_test', 2)
       @@cluster.graph_options.graph_name = 'spark_test'
@@ -47,7 +47,7 @@ class SparkTest < IntegrationTestCase
 
   def self.create_graph(session, graph_name, rf = 3)
     replication_config = "{'class' : 'SimpleStrategy', 'replication_factor' : #{rf}}"
-    session.execute_graph("system.graph('#{graph_name}').option('graph.replication_config').set(\"#{replication_config}\").ifNotExists().create()", timeout: 182)
+    session.execute_graph("system.graph('#{graph_name}').option('graph.replication_config').set(\"#{replication_config}\").ifNotExists().create()")
     session.execute_graph("schema.config().option('graph.schema_mode').set(com.datastax.bdp.graph.api.model.Schema.Mode.Production)", graph_name: graph_name)
     session.execute_graph("schema.config().option('graph.allow_scan').set('true')", graph_name: graph_name)
   end
@@ -74,7 +74,7 @@ class SparkTest < IntegrationTestCase
     # Run a query three times and verify that we always run against the same node.
     hosts = Set.new
     3.times do
-      results = @@session.execute_graph('g.V().count()', graph_source: 'a', timeout: 32)
+      results = @@session.execute_graph('g.V().count()', graph_source: 'a')
       assert_equal 6, results.first.value
       hosts << results.execution_info.hosts.last.ip
     end
