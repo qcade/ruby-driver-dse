@@ -21,7 +21,7 @@ class GraphTest < IntegrationTestCase
     else
       @@ccm_cluster = CCM.setup_graph_cluster(1, 3)
 
-      @@cluster = Dse.cluster(timeout: 32)
+      @@cluster = Dse.cluster
       @@session = @@cluster.connect
 
       remove_graph(@@session, 'users')
@@ -114,14 +114,14 @@ class GraphTest < IntegrationTestCase
 
   def self.create_graph(session, graph_name, rf = 3)
     replication_config = "{'class' : 'SimpleStrategy', 'replication_factor' : #{rf}}"
-    session.execute_graph("system.graph('#{graph_name}').option('graph.replication_config').set(\"#{replication_config}\").ifNotExists().create()", timeout: 182)
+    session.execute_graph("system.graph('#{graph_name}').option('graph.replication_config').set(\"#{replication_config}\").ifNotExists().create()")
     session.execute_graph("schema.config().option('graph.schema_mode').set(com.datastax.bdp.graph.api.model.Schema.Mode.Production)", graph_name: graph_name)
     session.execute_graph("schema.config().option('graph.allow_scan').set('true')", graph_name: graph_name)
   end
 
   def self.remove_graph(session, graph)
-    if session.execute_graph("system.graph('#{graph}').exists()", timeout: 182).first.value
-      session.execute_graph("system.graph('#{graph}').drop()", timeout: 182)
+    if session.execute_graph("system.graph('#{graph}').exists()").first.value
+      session.execute_graph("system.graph('#{graph}').drop()")
     end
   end
 
@@ -272,6 +272,45 @@ class GraphTest < IntegrationTestCase
     @@ccm_cluster.start_node('node1')
   end
 
+  # Test for setting server side timeouts
+  #
+  # test_can_send_graph_timeout_to_server tests that the driver is able to send a server-side timeout to DSE Graph,
+  # to be used as the timeout for graph queries. It performs a simple graph query with a request_timeout, which will
+  # be sent to DSE Graph. Since this timeout is very small, it will always raise a server-side timeout. We verify that
+  # this timeout is raised. It performs this same test once more using the graph options. Finally, it performs the
+  # same test one last time, but blocking all the nodes to verify that a TimeoutError is triggered.
+  #
+  # @expected_errors [Cassandra::Errors::InvalidError] When the graph query is executed using a small request_timeout
+  # @expected_errors [Cassandra::Errors::TimeoutError] When the graph query is executed with all nodes down
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-210
+  # @expected_result the graph server-side timeout should be set and used during graph query execution
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_can_send_graph_timeout_to_server
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    assert_raises(Cassandra::Errors::InvalidError) do
+      @@session.execute_graph("g.V()", timeout: 0.01)
+    end
+
+    @@cluster.graph_options.timeout = 0.01
+    assert_raises(Cassandra::Errors::InvalidError) do
+      @@session.execute_graph("g.V()")
+    end
+    @@cluster.graph_options.clear
+
+    @@ccm_cluster.block_nodes
+    assert_raises(Cassandra::Errors::TimeoutError) do
+      @@session.execute_graph("g.V()", timeout: 0.01)
+    end
+  ensure
+    @@ccm_cluster.unblock_nodes
+  end
+
   # Test for retrying idempotent statements on timeout
   #
   # test_graph_statement_idempotency_on_timeout tests that idempotent graph statements are retried automatically on the
@@ -310,7 +349,7 @@ class GraphTest < IntegrationTestCase
     end
 
     Retry.with_attempts(5, Cassandra::Errors::InvalidError, Cassandra::Errors::NoHostsAvailable) do
-      info = session.execute_graph('g.V()', timeout:5, idempotent: true).execution_info
+      info = session.execute_graph('g.V()', timeout: 5, idempotent: true).execution_info
       assert_equal 3, info.hosts.size
       assert_equal '127.0.0.1', info.hosts[0].ip.to_s
       assert_equal '127.0.0.2', info.hosts[1].ip.to_s
