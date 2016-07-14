@@ -9,9 +9,9 @@
 
 require 'spec_helper'
 
-# noinspection RubyStringKeysInHashInspection
 module Dse
   module Graph
+    # noinspection RubyStringKeysInHashInspection
     describe Options do
       let(:options) { Dse::Graph::Options.new }
 
