@@ -18,9 +18,8 @@ end
 require 'cassandra'
 
 module Dse
-  # Creates a {Dse::Cluster Cluster instance}, which extends Cassandra::Cluster
-  # <http://datastax.github.io/ruby-driver/api/cassandra/cluster>`.
-  # The API is identical, except that it returns a `Dse::Session` (see below). It takes all of the same options
+  # Creates a {Dse::Cluster Cluster instance}, which extends {http://docs.datastax.com/en/developer/ruby-driver/3.0/supplemental/api/cassandra/cluster/?local=true&nav=toc Cassandra::Cluster}.
+  # The API is identical, except that it returns a {Dse::Session Dse::Session} (see below). It takes all of the same options
   # as Cassandra.cluster and the following extra options.
   #
   # @option options [Dse::Graph::Options] :graph_options options for the DSE graph statement handler. Takes

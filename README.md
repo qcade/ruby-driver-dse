@@ -31,10 +31,9 @@ The driver is named dse-driver on rubygems.org and can easily be installed with 
 download the appropriate Cassandra driver as well.
 
 ## Graph
-Executing graph statements is similar to issuing CQL queries in the Cassandra
-driver. The difference is that while the Cassandra driver returns rows of results from
-tables, the DSE driver returns graph result sets, which may contain domain object
-representations of graph objects.
+The DSE Graph service processes graph queries written in the [Gremlin](https://github.com/tinkerpop/gremlin/wiki) language.
+`Session#execute_graph` and `Session#execute_graph_async` are responsible for transmitting graph queries to DSE graph.
+The response is a graph result set, which may contain domain object representations of graph objects.
 
 Any script using the DSE driver to execute graph queries will begin like this: 
 

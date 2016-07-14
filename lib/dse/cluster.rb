@@ -10,7 +10,7 @@
 module Dse
   # Cluster represents a DSE cluster. It serves as a
   # {Dse::Session session factory} and a collection of metadata. It wraps
-  # a {http://datastax.github.io/ruby-driver/api/cassandra/cluster Cassandra::Cluster} and exposes all of its
+  # a {http://docs.datastax.com/en/developer/ruby-driver/3.0/supplemental/api/cassandra/cluster/?local=true&nav=toc Cassandra::Cluster} and exposes all of its
   # functionality.
   class Cluster
     # @return [Dse::Graph::Options] default graph options used by queries on this cluster.
@@ -56,7 +56,7 @@ module Dse
       @futures = futures_factory
     end
 
-    # Delegates to {http://datastax.github.io/ruby-driver/api/cassandra/cluster/#connect_async-instance_method
+    # Delegates to {http://docs.datastax.com/en/developer/ruby-driver/3.0/supplemental/api/cassandra/cluster/?local=true&nav=toc#connect_async-instance_method
     # Cassandra::Cluster#connect_async}
     # to connect asynchronously to a cluster, but returns a future that will resolve to a DSE session rather than
     # Cassandra session.
