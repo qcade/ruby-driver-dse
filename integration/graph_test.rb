@@ -851,6 +851,56 @@ class GraphTest < IntegrationTestCase
     end
   end
 
+  # Test for Duration Graph datatype
+  #
+  # test_can_use_duration_datatype tests that the Duration graph datatype can be used. It first creates a simple
+  # Duration object and verifies its attributes. It then creates this same object, but using the duration string form.
+  # It finally tests some invalid and valid Duration constructors.
+  #
+  # @expected_errors [ArgumentError] When invalid constructors are used
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-230
+  # @expected_result duration datatype should be created
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_can_use_duration_datatype
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    duration = Dse::Graph::Duration.new(2, 3, 1, 4.528)
+    assert_equal 2, duration.days
+    assert_equal 3, duration.hours
+    assert_equal 1, duration.minutes
+    assert_equal 4.528, duration.seconds
+    assert_equal 'P2DT3H1M4.528S', duration.to_s
+
+    duration2 = Dse::Graph::Duration.parse('P2DT3H1M4.528S')
+    assert_equal duration, duration2
+
+    duration2.days -= 2
+    duration2.hours += 48
+    duration2.minutes = -1
+    duration2.seconds += 120
+    assert_equal 'P0DT51H-1M124.528S', duration2.to_s
+    assert_equal duration, duration2
+
+    # Invalid duration string form
+    assert_raises(ArgumentError) do
+      Dse::Graph::Duration.parse('P2DTfff3H1M4.528S')
+    end
+
+    # Empty constructor is invalid
+    assert_raises(ArgumentError) do
+      Dse::Graph::Duration.new
+    end
+
+    # Nil args are parsed into 0
+    duration3 = Dse::Graph::Duration.new(nil, nil, nil, nil)
+    assert_equal 'P0DT0H0M0.0S', duration3.to_s
+  end
+
   # Test for creating and retrieving vertices with all graph datatypes
   #
   # test_can_create_vertex_with_all_datatypes tests that vertices can be inserted which have vertex properties with
@@ -882,7 +932,7 @@ class GraphTest < IntegrationTestCase
           assert_equal input_value, returned_value
         end
       elsif datatype == 'duration'
-        assert_equal 'PT51H4M', returned_value
+        assert_equal input_value, Dse::Graph::Duration.parse(returned_value)
       elsif datatype == 'inet'
         assert_equal input_value, ::IPAddr.new(returned_value)
       elsif datatype == 'timestamp'
