@@ -95,7 +95,7 @@ class GraphTest < IntegrationTestCase
       schema.propertyKey('characterName').Text().create();
       schema.vertexLabel('character').properties('characterName').create();
       GRAPH
-
+      
       # Adding a sleep here to allow for schema to propagate to all graph nodes
       sleep(5)
     end
@@ -365,8 +365,9 @@ class GraphTest < IntegrationTestCase
   #
   # test_can_use_graph_options tests that graph options can be used in both the cluster and queries. It first creates a
   # simple Dse::Graph::Options with graph_name and graph_language parameters set. It then verifies that these settings are
-  # honored when the graph options are merged into the cluster's graph options by executing a simple query. Finally it
-  # clears out the cluster graph options and verifies that the same graph options can be used at query execution.
+  # honored when the graph options are merged into the cluster's graph options by executing a simple query. It then
+  # verifies that we are able to clear graph options. Finally it clears out all existing cluster graph options and
+  # verifies that the same graph options can be used at query execution.
   #
   # @since 1.0.0
   # @jira_ticket RUBY-204
@@ -389,11 +390,51 @@ class GraphTest < IntegrationTestCase
     vertices = @@session.execute_graph('g.V()')
     refute_nil vertices
 
+    # Options can be reset
+    @@cluster.graph_options.delete('graph_name')
+    assert_nil @@cluster.graph_options.graph_name
+
     # Clear the graph options to be sure that the graph options specified in the query has an effect.
     @@cluster.graph_options.clear
     second_vertices = @@session.execute_graph('g.V()', graph_options: graph_options)
     refute_nil second_vertices
     assert_equal vertices, second_vertices
+  end
+
+  # Test for using graph transaction configuration options
+  #
+  # test_can_use_graph_expert_options tests that graph transaction configuration options, or 'expert options' can be
+  # used in graph options as a custom payload. It first checks that the initial value of 'graph-name' option is 'users'.
+  # It then sets 'graph-name' to be 'test' and verifies that DSE graph returns the results for the proper graph. It then
+  # sets the option to nil and verifies that the nil option is ignored. Finally, it verifies that the transaction
+  # configuration option can be cleared.
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-222
+  # @expected_result graph transaction configuration options should be set and used in query execution
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_can_use_graph_expert_options
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    # Initial value
+    assert_equal('users', @@cluster.graph_options.as_payload['graph-name'])
+
+    # Set graph-name
+    @@cluster.graph_options.set('graph-name', 'test')
+    assert_equal('test', @@cluster.graph_options.as_payload['graph-name'])
+    assert_equal(0, @@session.execute_graph('g.V().count()').first.value)
+
+    # Nil options are ignored
+    @@cluster.graph_options.set('graph-name', nil)
+    assert_equal('test', @@cluster.graph_options.as_payload['graph-name'])
+    assert_equal(0, @@session.execute_graph('g.V().count()').first.value)
+
+    # Reset options
+    @@cluster.graph_options.delete('graph-name')
+    assert_nil @@cluster.graph_options.as_payload['graph-name']
   end
 
   # Test for creating a new graph
