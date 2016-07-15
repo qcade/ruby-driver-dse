@@ -93,6 +93,14 @@ module Dse
         self
       end
 
+      # Delete an option from this {Options} object.
+      # @param key [String, Symbol] option to delete.
+      # @return nil
+      def delete(key)
+        @real_options.delete(stringify(key))
+        nil
+      end
+
       # Merge another {Options} object with this one to produce a new merged {Options} object.
       # The "other" object's values take precedence over this one.
       # @param other [Options] Options object to merge with this one.

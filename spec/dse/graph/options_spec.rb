@@ -138,6 +138,20 @@ module Dse
         end
       end
 
+      context :delete do
+        it 'should delete standard options' do
+          options.set('graph-name', 'mygraph')
+          options.delete(:graph_name)
+          expect(options.graph_name).to be_nil
+        end
+
+        it 'should delete arbitrary options' do
+          options.set(:super_cool, 'value')
+          options.delete('super-cool')
+          expect(options.as_payload).to_not include('super-cool')
+        end
+      end
+
       context :as_payload do
         it 'should produce a payload only with non-nil entries' do
           expect(options.as_payload).to eq('graph-source' => 'g',
