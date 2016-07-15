@@ -17,6 +17,9 @@ module Dse
         expect(Duration.new(nil, nil, nil, nil).to_s).to eq('P0DT0H0M0.0S')
       end
 
+      it 'should consider equivalent Durations as equal' do
+        expect(Duration.new(1, 2, 3, 4)).to eq(Duration.new(0, 26, 0, 184))
+      end
       context :initialize do
         it 'should coerce nil args to the right types' do
           duration = Duration.new(nil, nil, nil, nil)
@@ -98,6 +101,24 @@ module Dse
 
         it 'should handle partially specified durations' do
           expect(Duration.parse('PT-5S')).to eq(Duration.new(0, 0, 0, -5))
+        end
+      end
+
+      context :as_seconds do
+        it 'should handle 0 duration' do
+          expect(Duration.new(0, 0, 0, 0).as_seconds).to eq(0)
+        end
+
+        it 'should handle positive duration' do
+          expect(Duration.new(1, 2, 3, 4).as_seconds).to eq(86400 + 2*3600 + 180 + 4)
+        end
+
+        it 'should handle negative duration' do
+          expect(Duration.new(-1, -2, -3, -4).as_seconds).to eq(-86400 - 2*3600 - 180 - 4)
+        end
+
+        it 'should handle mixed positive and negative duration' do
+          expect(Duration.new(-1, 2, -3, 4).as_seconds).to eq(-86400 + 2*3600 - 180 + 4)
         end
       end
     end

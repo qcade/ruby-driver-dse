@@ -83,13 +83,14 @@ module Dse
 
       # @private
       def eql?(other)
-        other.is_a?(Duration) && \
-          @days == other.days && \
-          @hours == other.hours && \
-          @minutes == other.minutes && \
-          @seconds == other.seconds
+        other.is_a?(Duration) && as_seconds == other.as_seconds
       end
       alias == eql?
+
+      # @return [Float] this {Duration} object converted to seconds
+      def as_seconds
+        @seconds + @minutes*60 + @hours*3600 + @days*86400
+      end
 
       # @private
       def hash
