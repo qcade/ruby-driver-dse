@@ -160,11 +160,11 @@ module Dse
       # @private
       def inspect
         "#<Dse::Graph::Options:0x#{object_id.to_s(16)} " \
-        "@graph_name=#{@real_options[:graph_name].inspect}, " \
-        "@graph_source=#{@real_options[:graph_source].inspect}, " \
-        "@graph_language=#{@real_options[:graph_language].inspect}, " \
-        "@graph_read_consistency=#{@real_options[:graph_read_consistency].inspect}, " \
-        "@graph_write_consistency=#{@real_options[:graph_write_consistency].inspect}, " \
+        "@graph_name=#{@real_options['graph-name'].inspect}, " \
+        "@graph_source=#{@real_options['graph-source'].inspect}, " \
+        "@graph_language=#{@real_options['graph-language'].inspect}, " \
+        "@graph_read_consistency=#{@real_options['graph-read-consistency'].inspect}, " \
+        "@graph_write_consistency=#{@real_options['graph-write-consistency'].inspect}, " \
         "@timeout=#{@timeout.inspect}>"
       end
     end
