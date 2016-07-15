@@ -70,7 +70,7 @@ class DatatypeUtils
     when 'boolean' then true
     when 'decimal' then ::BigDecimal.new('1313123123.234234234234234234123')
     when 'double' then 3.141592653589793
-    when 'duration' then 'P2DT3H4M'
+    when 'duration' then Dse::Graph::Duration.new(2, 3, 4, 1.529)
     when 'float' then 1.25
     when 'inet' then ::IPAddr.new('200.199.198.197')
     when 'int' then 4
