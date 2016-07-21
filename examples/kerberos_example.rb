@@ -5,7 +5,6 @@
 #      http://www.datastax.com/terms/datastax-dse-driver-license-terms
 #++
 
-# This is temporary while we're getting the Ruby driver from GitHub.
 require 'bundler'
 Bundler.setup
 
