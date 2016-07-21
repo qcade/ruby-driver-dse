@@ -113,6 +113,9 @@ module Dse
         result = Options.new
         result.instance_variable_set(:@real_options,
                                      @real_options.merge(other.instance_variable_get(:@real_options)))
+        other_timeout = other.instance_variable_get(:@timeout)
+        result.instance_variable_set(:@timeout,
+                                     other_timeout ? other_timeout : @timeout)
         result
       end
 
@@ -125,6 +128,7 @@ module Dse
       def merge!(other)
         result = merge(other)
         @real_options = result.instance_variable_get(:@real_options)
+        @timeout = result.instance_variable_get(:@timeout)
         self
       end
 

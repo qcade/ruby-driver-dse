@@ -74,6 +74,32 @@ module Dse
           expect(final).to eq(other)
         end
 
+        it 'should merge timeout with base nil' do
+          other = Dse::Graph::Options.new(timeout: 7)
+          final = options.merge(other)
+
+          # options should not have changed.
+          expect(options.timeout).to be_nil
+
+          expect(final.timeout).to eq(other.timeout)
+        end
+
+        it 'should merge timeout with base non-nil' do
+          other = Dse::Graph::Options.new(timeout: 7)
+          options.timeout = 3
+          final = options.merge(other)
+
+          expect(final.timeout).to eq(other.timeout)
+        end
+
+        it 'should not merge nil timeout' do
+          other = Dse::Graph::Options.new
+          options.timeout = 3
+          final = options.merge(other)
+
+          expect(final.timeout).to eq(options.timeout)
+        end
+
         it 'should treat nil merge as no-op' do
           final = options.merge(nil)
 
@@ -118,6 +144,15 @@ module Dse
           expect(final.graph_language).to eq('mylang')
           expect(final.graph_read_consistency).to be_nil
           expect(final.graph_write_consistency).to be_nil
+        end
+      end
+
+      context 'merge!' do
+        it 'should merge timeout and internal state' do
+          other = Dse::Graph::Options.new(timeout: 7)
+          options.merge!(other)
+          expect(options.timeout).to eq(other.timeout)
+          expect(options.instance_variable_get(:@real_options)).to eq(other.instance_variable_get(:@real_options))
         end
       end
 
