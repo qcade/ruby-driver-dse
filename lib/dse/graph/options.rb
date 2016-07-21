@@ -75,12 +75,18 @@ module Dse
       # @private
       def timeout=(val)
         set_timeout(val)
+        val
       end
 
       # @private
       def set_timeout(new_timeout)
         @timeout = new_timeout
-        @real_options['request-timeout'] = [@timeout * 1000].pack('Q>') if @timeout
+        if @timeout
+          @real_options['request-timeout'] = [@timeout * 1000].pack('Q>')
+        else
+          @real_options.delete('request-timeout')
+        end
+        nil
       end
 
       # Set an option in this {Options} object. This is primarily used to set "expert" options that
@@ -97,7 +103,13 @@ module Dse
       # @param key [String, Symbol] option to delete.
       # @return nil
       def delete(key)
-        @real_options.delete(stringify(key))
+        string_key = stringify(key)
+        if string_key == 'timeout'
+          @timeout = nil
+          @real_options.delete('request-timeout')
+        else
+          @real_options.delete(string_key)
+        end
         nil
       end
 
@@ -119,6 +131,13 @@ module Dse
         result
       end
 
+      # Clear the options within this {Options} object.
+      def clear
+        # Used by tests only.
+        @real_options.clear
+        @timeout = nil
+      end
+
       # @private
       def stringify(attr)
         attr.to_s.tr('_', '-')
@@ -130,12 +149,6 @@ module Dse
         @real_options = result.instance_variable_get(:@real_options)
         @timeout = result.instance_variable_get(:@timeout)
         self
-      end
-
-      # @private
-      def clear
-        # Used by tests only.
-        @real_options.clear
       end
 
       # @return whether or not this options object is configured for the analytics graph source.
