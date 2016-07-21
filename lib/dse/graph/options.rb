@@ -138,7 +138,6 @@ module Dse
 
       # Clear the options within this {Options} object.
       def clear
-        # Used by tests only.
         @real_options.clear
         @timeout = nil
       end
