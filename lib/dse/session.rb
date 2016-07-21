@@ -53,7 +53,7 @@ module Dse
 
       graph_options = @graph_options.merge(graph_statement.options)
       options[:payload] = graph_options.as_payload
-      options[:timeout] = nil unless options[:timeout]
+      options[:timeout] = graph_options.timeout
 
       if graph_options.analytics?
         @cassandra_session.execute_async('CALL DseClientTool.getAnalyticsGraphServer()').then do |rows|

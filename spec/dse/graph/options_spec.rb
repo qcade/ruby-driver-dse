@@ -74,6 +74,32 @@ module Dse
           expect(final).to eq(other)
         end
 
+        it 'should merge timeout with base nil' do
+          other = Dse::Graph::Options.new(timeout: 7)
+          final = options.merge(other)
+
+          # options should not have changed.
+          expect(options.timeout).to be_nil
+
+          expect(final.timeout).to eq(other.timeout)
+        end
+
+        it 'should merge timeout with base non-nil' do
+          other = Dse::Graph::Options.new(timeout: 7)
+          options.timeout = 3
+          final = options.merge(other)
+
+          expect(final.timeout).to eq(other.timeout)
+        end
+
+        it 'should not merge nil timeout' do
+          other = Dse::Graph::Options.new
+          options.timeout = 3
+          final = options.merge(other)
+
+          expect(final.timeout).to eq(options.timeout)
+        end
+
         it 'should treat nil merge as no-op' do
           final = options.merge(nil)
 
@@ -121,6 +147,15 @@ module Dse
         end
       end
 
+      context 'merge!' do
+        it 'should merge timeout and internal state' do
+          other = Dse::Graph::Options.new(timeout: 7)
+          options.merge!(other)
+          expect(options.timeout).to eq(other.timeout)
+          expect(options.instance_variable_get(:@real_options)).to eq(other.instance_variable_get(:@real_options))
+        end
+      end
+
       context :set do
         it 'should ignore nil value options' do
           options.set('graph-name', nil)
@@ -150,6 +185,46 @@ module Dse
           options.delete('super-cool')
           expect(options.as_payload).to_not include('super-cool')
         end
+
+        it 'should delete timeout' do
+          options.timeout = 8
+          options.delete(:timeout)
+          expect(options.timeout).to be_nil
+          expect(options.as_payload).to_not include('request-timeout')
+
+          options.timeout = 8
+          options.delete('timeout')
+          expect(options.timeout).to be_nil
+          expect(options.as_payload).to_not include('request-timeout')
+        end
+      end
+
+      context 'timeout=' do
+        it 'should include request-timeout option if there is a timeout assigned' do
+          options = Dse::Graph::Options.new
+          options.timeout = 7
+          expect(options.as_payload).to eq('request-timeout' => [7000].pack('Q>'),
+                                           'graph-source' => 'g',
+                                           'graph-language' => 'gremlin-groovy')
+        end
+
+        it 'should ignore explicitly provided request-timeout option' do
+          options = Dse::Graph::Options.new(request_timeout: 7000)
+          expect(options.as_payload).to eq('graph-source' => 'g',
+                                           'graph-language' => 'gremlin-groovy')
+
+          options = Dse::Graph::Options.new('request-timeout' => 7000)
+          expect(options.as_payload).to eq('graph-source' => 'g',
+                                           'graph-language' => 'gremlin-groovy')
+        end
+
+        it 'should clear request-timeout if timeout is assigned nil' do
+          options = Dse::Graph::Options.new(timeout: 7)
+
+          options.timeout = nil
+          expect(options.timeout).to be_nil
+          expect(options.as_payload).to_not include('request-timeout')
+        end
       end
 
       context :as_payload do
@@ -170,24 +245,6 @@ module Dse
           options = Dse::Graph::Options.new(timeout: 7)
           expect(options.as_payload).to eq('request-timeout' => [7000].pack('Q>'),
                                            'graph-source' => 'g',
-                                           'graph-language' => 'gremlin-groovy')
-        end
-
-        it 'should include request-timeout option if there is a timeout assigned' do
-          options = Dse::Graph::Options.new
-          options.timeout = 7
-          expect(options.as_payload).to eq('request-timeout' => [7000].pack('Q>'),
-                                           'graph-source' => 'g',
-                                           'graph-language' => 'gremlin-groovy')
-        end
-
-        it 'should ignore explicitly provided request-timeout option' do
-          options = Dse::Graph::Options.new(request_timeout: 7000)
-          expect(options.as_payload).to eq('graph-source' => 'g',
-                                           'graph-language' => 'gremlin-groovy')
-
-          options = Dse::Graph::Options.new('request-timeout' => 7000)
-          expect(options.as_payload).to eq('graph-source' => 'g',
                                            'graph-language' => 'gremlin-groovy')
         end
       end
