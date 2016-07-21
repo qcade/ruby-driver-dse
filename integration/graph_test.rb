@@ -95,7 +95,7 @@ class GraphTest < IntegrationTestCase
       schema.propertyKey('characterName').Text().create();
       schema.vertexLabel('character').properties('characterName').create();
       GRAPH
-      
+
       # Adding a sleep here to allow for schema to propagate to all graph nodes
       sleep(5)
     end
@@ -435,6 +435,60 @@ class GraphTest < IntegrationTestCase
     # Reset options
     @@cluster.graph_options.delete('graph-name')
     assert_nil @@cluster.graph_options.as_payload['graph-name']
+  end
+
+  # Test for using graph timeouts
+  #
+  # test_can_use_graph_timeouts tests that graph timeouts can be used. It first verifies that the default timeout
+  # for graph queries is nil, which means unlimited timeout. It then creates a Graph Options object with a set timeout,
+  # and verifies that the option is used automatically when executing a graph query. It then executes a graph query
+  # with a set timeout in the statement, and verifies that the statement timeout supersedes the graph option timeout.
+  # Finally, it verifies that the graph timeout can be set and removed in various ways.
+  #
+  # @since 1.0.0
+  # @jira_ticket RUBY-252
+  # @expected_result graph timeout should be used if present
+  #
+  # @test_assumptions Graph-enabled Dse cluster.
+  # @test_category dse:graph
+  #
+  def test_can_use_graph_timeouts
+    skip('Graph is only available in DSE after 5.0') if CCM.dse_version < '5.0.0'
+
+    # Default timeout is unlimited
+    assert_nil @@cluster.graph_options.timeout
+    execution_info = @@session.execute_graph('g.V()').execution_info
+    assert_nil execution_info.options.timeout
+    assert_nil execution_info.options.payload['request-timeout']
+
+    @@cluster.graph_options.clear
+
+    # Timeout defined in graph_options is used
+    graph_options = Dse::Graph::Options.new(graph_name: 'users', timeout: 10)
+    @@cluster.graph_options.merge!(graph_options)
+    assert_equal 10, @@cluster.graph_options.timeout
+
+    execution_info = @@session.execute_graph('g.V()').execution_info
+    assert_equal 10, execution_info.options.timeout
+    refute_nil execution_info.options.payload['request-timeout']
+
+    # Timeout defined in query is used
+    execution_info = @@session.execute_graph('g.V()', timeout: 20).execution_info
+    assert_equal 20, execution_info.options.timeout
+    refute_nil execution_info.options.payload['request-timeout']
+
+    # Timeout can be set or deleted
+    @@cluster.graph_options.timeout = 30
+    assert_equal 30, @@cluster.graph_options.timeout
+
+    @@cluster.graph_options.timeout = nil
+    assert_nil @@cluster.graph_options.timeout
+
+    @@cluster.graph_options.set('timeout', 40)
+    assert_equal 40, @@cluster.graph_options.timeout
+
+    @@cluster.graph_options.delete('timeout')
+    assert_nil @@cluster.graph_options.timeout
   end
 
   # Test for creating a new graph
