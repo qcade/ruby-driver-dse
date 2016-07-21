@@ -724,7 +724,11 @@ module CCM extend self
     def disable_kerberos
       stop
       Process.kill('INT', @ads_server.pid)
-      Process.waitpid(@ads_server.pid)
+      begin
+        Process.waitpid(@ads_server.pid)
+      rescue => e
+        puts "Caught (and ignoring) exception #{e.inspect} while waiting for embedded-ads to stop."
+      end
       puts 'The embedded-ads server with Kerberos has been stopped'
       @ads_server = nil
 
@@ -774,7 +778,11 @@ module CCM extend self
     def disable_ldap
       stop
       Process.kill('INT', @ads_server.pid)
-      Process.waitpid(@ads_server.pid)
+      begin
+        Process.waitpid(@ads_server.pid)
+      rescue => e
+        puts "Caught (and ignoring) exception #{e.inspect} while waiting for embedded-ads to stop."
+      end
       puts 'The embedded-ads server with LDAP has been stopped'
       @ads_server = nil
 
