@@ -171,6 +171,18 @@ module Dse
           options.set(:super_cool, 'value')
           expect(options.as_payload).to include('super-cool' => 'value')
         end
+
+        it 'should set timeout (symbol) properly' do
+          options.set(:timeout, 7)
+          expect(options.as_payload).to include('request-timeout' => [7000].pack('Q>'))
+          expect(options.timeout).to eq(7)
+        end
+
+        it 'should set timeout (string) properly' do
+          options.set('timeout', 7)
+          expect(options.as_payload).to include('request-timeout' => [7000].pack('Q>'))
+          expect(options.timeout).to eq(7)
+        end
       end
 
       context :delete do
