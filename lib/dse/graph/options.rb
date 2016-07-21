@@ -95,7 +95,12 @@ module Dse
       # @param value [String] value to set for the option.
       # @return [Options] self, thus allowing method chaining.
       def set(key, value)
-        @real_options[stringify(key)] = value if value
+        string_key = stringify(key)
+        if string_key == 'timeout'
+          set_timeout(value)
+        else
+          @real_options[stringify(key)] = value if value
+        end
         self
       end
 
