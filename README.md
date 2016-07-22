@@ -249,7 +249,6 @@ export JRUBY_OPTS="-J-Djava.security.krb5.conf=/home/user1/krb5.conf"
 #### Configuring the Client
 To enable kerberos authentication with DSE nodes, set the `auth_provider` of the cluster to
 a `Dse::Auth::Providers::GssApi` instance. The following example code shows all the ways to set this up.
-This example is also available in the examples directory.
 
 ```ruby
 require 'dse'
