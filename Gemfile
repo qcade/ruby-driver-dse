@@ -7,8 +7,6 @@ gem 'lz4-ruby',      group: [:development, :test]
 gem 'rake-compiler', group: [:development, :test]
 gem 'cliver',        group: [:development, :test]
 
-gem 'cassandra-driver', '=3.0.2'
-
 group :development do
   platforms :mri_19 do
     gem 'perftools.rb'
