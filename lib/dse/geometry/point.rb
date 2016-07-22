@@ -69,6 +69,11 @@ module Dse
         "POINT (#{wkt_internal})"
       end
 
+      # @return [String] a human-readable English string describing this {Point}.
+      def to_s
+        "#{@x},#{@y}"
+      end
+
       # @private
       def wkt_internal
         # This is a helper used to embed point coords into some container (e.g. line-string, polygon)
@@ -106,11 +111,6 @@ module Dse
         "#<Point:0x#{object_id.to_s(16)} " \
           "@x=#{@x.inspect}, " \
           "@y=#{@y.inspect}>"
-      end
-
-      # @private
-      def to_s
-        "#{@x},#{@y}"
       end
 
       # methods related to serializing/deserializing.

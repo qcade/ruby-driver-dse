@@ -75,6 +75,11 @@ module Dse
         @points.empty? ? 'LINESTRING EMPTY' : "LINESTRING (#{wkt_internal})"
       end
 
+      # @return [String] a human-readable English string describing this {LineString}.
+      def to_s
+        @points.join(' to ')
+      end
+
       # @private
       def wkt_internal
         # This is a helper used to embed point coords into some container (e.g. polygon)
@@ -97,11 +102,6 @@ module Dse
       def inspect
         "#<LineString:0x#{object_id.to_s(16)} " \
           "@points=#{@points.inspect}>"
-      end
-
-      # @private
-      def to_s
-        @points.join(' to ')
       end
 
       # methods related to serializing/deserializing.

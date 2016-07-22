@@ -107,6 +107,13 @@ module Dse
         result
       end
 
+      # @return [String] a human-readable English string describing this {Polygon}.
+      def to_s
+        "Exterior ring: #{@rings.first}\n" \
+          "Interior rings:\n    " +
+            interior_rings.join("\n    ")
+      end
+
       # @private
       def eql?(other)
         other.is_a?(Polygon) && \
@@ -124,13 +131,6 @@ module Dse
         "#<Polygon:0x#{object_id.to_s(16)} " \
           "@exterior_ring=#{@rings.first.inspect}, " \
         "@interior_rings=#{interior_rings.inspect}>"
-      end
-
-      # @private
-      def to_s
-        "Exterior ring: #{@rings.first}\n" \
-          "Interior rings:\n    " +
-          interior_rings.join("\n    ")
       end
 
       # methods related to serializing/deserializing.

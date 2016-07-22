@@ -9,7 +9,9 @@
 
 module Dse
   module Graph
-    # Represents a duration of time, corresponding to the Duration datatype in DSE Graph.
+    # Represents a duration of time, corresponding to the Duration datatype in DSE Graph. In DSE Graph,
+    # this type is represented by the
+    # {https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html Java 8 Duration} type.
     class Duration
       # Days in duration of time.  May be negative. Is internally coerced to an integer,
       # so a value being assigned need not be an `Integer` itself.
@@ -75,7 +77,19 @@ module Dse
         Duration.new(parse_result[:days], parse_result[:hours], parse_result[:minutes], parse_result[:seconds])
       end
 
-      # @private
+      # A string formatted as `PnDTnHnMn.nS`, where `n` is a number that goes with the character code following it.
+      #
+      # D - days<br>
+      # H - hours<br>
+      # M - minutes<br>
+      # S - seconds<br>
+      #
+      # @example a duration of 1 day, 2 hours, 3 minutes, 4.5 seconds
+      #  P1DT2H3M4.5S
+      # @return [String] this {Duration} as a string formatted `PnDTnHnMn.nS`.
+      #
+      # @see https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-
+      #   Java 8 Duration#parse
       def to_s
         # Construct a string of the form PnDTnHnMn.nS
         "P#{@days}DT#{@hours}H#{@minutes}M#{@seconds}S"
