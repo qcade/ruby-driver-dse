@@ -36,5 +36,17 @@ end
 if cassandra_version.start_with?('1.2')
   cassandra_version_tags << ',@cassandra-version-1.2'
 end
+
+dse_version = ENV['DSE_VERSION'] || '5.0.1'
+
+dse_version_tags = ''
+
+if dse_version > '5.0'
+  dse_version_tags << ',@dse-version-5.0'
+else
+  dse_version_tags << ',@dse-version-less-5.0'
+end
+
 %>
-default: --color --guess --tags ~@todo --tags ~@cassandra-version-specific<%= cassandra_version_tags %> -r features/
+default: --color --guess --tags ~@todo --tags ~@dse-version-specific<%= dse_version_tags %> -r features/
+

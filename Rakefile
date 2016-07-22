@@ -32,6 +32,7 @@ end
 Rake::TestTask.new(:integration => :compile) do |t|
   t.libs.push 'lib'
   t.test_files = FileList['integration/*_test.rb',
-                          'integration/security/*_test.rb']
+                          'integration/authentication/*_test.rb']
   t.verbose = true
 end
+
