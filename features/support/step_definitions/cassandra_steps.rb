@@ -13,21 +13,21 @@ end
 
 Given(/^a running cassandra cluster with authentication enabled$/) do
   step "a running cassandra cluster"
-  @username, @password = @cluster.enable_authentication
+  @username, @password = $cluster.enable_authentication
 end
 
 Given(/^a running cassandra cluster with SSL encryption enabled$/) do
   step "a running cassandra cluster"
-  @server_cert = @cluster.enable_ssl
+  @server_cert = $cluster.enable_ssl
 end
 
 Given(/^a running cassandra cluster with SSL client authentication enabled$/) do
   step "a running cassandra cluster"
-  @server_cert, @client_cert, @private_key, @passphrase = @cluster.enable_ssl_client_auth
+  @server_cert, @client_cert, @private_key, @passphrase = $cluster.enable_ssl_client_auth
 end
 
 Given(/^a running cassandra cluster in (\d+) datacenter(?:s)? with (\d+) nodes in each$/) do |no_dc, no_nodes_per_dc|
-  @cluster = CCM.setup_cluster(no_dc.to_i, no_nodes_per_dc.to_i)
+  $cluster = CCM.setup_cluster(no_dc.to_i, no_nodes_per_dc.to_i)
 end
 
 Given(/^a running cassandra cluster with schema:$/) do |schema|
@@ -36,7 +36,7 @@ Given(/^a running cassandra cluster with schema:$/) do |schema|
 end
 
 Given(/^the following schema:$/) do |schema|
-  @cluster.setup_schema(schema)
+  $cluster.setup_schema(schema)
 end
 
 Given(/^an empty schema$/) do
@@ -44,7 +44,7 @@ Given(/^an empty schema$/) do
 end
 
 When(/^I execute the following cql:$/) do |cql|
-  @cluster.execute(cql)
+  $cluster.execute(cql)
 end
 
 Given(/^the following example:$/) do |code|
@@ -85,11 +85,11 @@ Given(/^I wait for its output to contain "(.*?)"$/) do |expected|
 end
 
 When(/^node (\d+) starts$/) do |i|
-  @cluster.start_node("node#{i}")
+  $cluster.start_node("node#{i}")
 end
 
 When(/^node (\d+) stops$/) do |i|
-  @cluster.stop_node("node#{i}")
+  $cluster.stop_node("node#{i}")
 end
 
 Given(/^node (\d+) is stopped$/) do |i|
@@ -97,12 +97,12 @@ Given(/^node (\d+) is stopped$/) do |i|
 end
 
 When(/^node (\d+) joins$/) do |i|
-  @cluster.add_node("node#{i}")
+  $cluster.add_node("node#{i}")
   step "node #{i} starts"
 end
 
 When(/^node (\d+) gets decommissioned$/) do |i|
-  @cluster.decommission_node("node#{i}")
+  $cluster.decommission_node("node#{i}")
 end
 
 Given(/^all nodes are down$/) do
@@ -110,12 +110,12 @@ Given(/^all nodes are down$/) do
 end
 
 When(/^all nodes go down$/) do
-  @cluster.stop
+  $cluster.stop
 end
 
 When(/^node (\d+) leaves$/) do |i|
   step "node #{i} gets decommissioned"
-  @cluster.remove_node("node#{i}")
+  $cluster.remove_node("node#{i}")
 end
 
 When(/^node (\d+) restarts$/) do |i|
@@ -124,25 +124,25 @@ When(/^node (\d+) restarts$/) do |i|
 end
 
 When(/^node (\d+) is unreachable$/) do |i|
-  @cluster.block_node("node#{i}")
+  $cluster.block_node("node#{i}")
 end
 
 When(/^all nodes are unreachable$/) do
-  @cluster.block_nodes
+  $cluster.block_nodes
 end
 
 When(/^node (\d+) is failing writes on keyspace "(.*?)"$/) do |i, keyspace|
-  @cluster.stop_node("node#{i}")
-  @cluster.start_node("node#{i}", "-Dcassandra.test.fail_writes_ks=#{keyspace}")
+  $cluster.stop_node("node#{i}")
+  $cluster.start_node("node#{i}", "-Dcassandra.test.fail_writes_ks=#{keyspace}")
 end
 
 When(/^tombstone thresholds are changed$/) do
-  @cluster.change_tombstone_thresholds
+  $cluster.change_tombstone_thresholds
 end
 
 When(/^payload mirroring query handler is enabled$/) do
-  @cluster.stop
-  @cluster.start("-Dcassandra.custom_query_handler_class=org.apache.cassandra.cql3.CustomPayloadMirroringQueryHandler")
+  $cluster.stop
+  $cluster.start("-Dcassandra.custom_query_handler_class=org.apache.cassandra.cql3.CustomPayloadMirroringQueryHandler")
 end
 
 When(/^I wait for (\d+) seconds$/) do |interval|
@@ -176,3 +176,4 @@ end
 #{code}
   CODE
 end
+

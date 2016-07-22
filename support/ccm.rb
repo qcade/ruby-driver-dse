@@ -691,6 +691,9 @@ module CCM extend self
       krb5_config = "#{ads_config_dir}/krb5.conf"
       ENV['DSE_KEYTAB'] = dse_keytab
       ENV['KRB5_CONFIG'] = krb5_config
+      if RUBY_ENGINE == 'jruby'
+        ENV['JRUBY_OPTS'] ||= "-J-Djava.security.krb5.conf=#{krb5_config}"
+      end
 
       # Generate the user files
       `kinit -t #{ads_config_dir}/dseuser.keytab -k dseuser@DATASTAX.COM -c dseuser.cache`
@@ -924,6 +927,18 @@ module CCM extend self
       @session.execute("USE system")
 
       nil
+    end
+
+    def execute_graph(gremlin, graph_name = nil)
+      start
+
+      gremlin.strip!
+      if graph_name
+        @session.execute_graph(gremlin, graph_name: graph_name)
+      else
+        @session.execute_graph(gremlin)
+      end
+
     end
 
     def refresh_status
@@ -1273,3 +1288,4 @@ if __FILE__ == $0
 
   CCM.setup_cluster(1, 3)
 end
+

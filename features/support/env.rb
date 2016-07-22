@@ -76,17 +76,35 @@ After do |s|
 end
 
 After('@auth') do
-  @cluster.disable_authentication
+  $cluster.disable_authentication
+end
+
+Before do |scenario|
+  if $dse_auth_enabled && !scenario.tags.map(&:name).include?('@dse_auth')
+    $cluster.disable_dse_authentication
+    $dse_auth_enabled = false
+  end
+
+  if $ldap_enabled && !scenario.tags.map(&:name).include?('@ldap_auth')
+    $cluster.disable_ldap
+    $ldap_enabled = false
+  end
+
+  if $kerberos_enabled && !scenario.tags.map(&:name).include?('@kerberos_auth')
+    $cluster.disable_kerberos
+    $kerberos_enabled = false
+  end
 end
 
 After('@ssl') do
-  @cluster.disable_ssl
+  $cluster.disable_ssl
 end
 
 After('@netblock') do
-  @cluster.unblock_nodes
+  $cluster.unblock_nodes
 end
 
 After('@client_failures') do
-  @cluster.restart
+  $cluster.restart
 end
+
