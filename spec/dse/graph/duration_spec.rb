@@ -110,15 +110,15 @@ module Dse
         end
 
         it 'should handle positive duration' do
-          expect(Duration.new(1, 2, 3, 4).as_seconds).to eq(86400 + 2*3600 + 180 + 4)
+          expect(Duration.new(1, 2, 3, 4).as_seconds).to eq(86400 + 2 * 3600 + 180 + 4)
         end
 
         it 'should handle negative duration' do
-          expect(Duration.new(-1, -2, -3, -4).as_seconds).to eq(-86400 - 2*3600 - 180 - 4)
+          expect(Duration.new(-1, -2, -3, -4).as_seconds).to eq(-86400 - 2 * 3600 - 180 - 4)
         end
 
         it 'should handle mixed positive and negative duration' do
-          expect(Duration.new(-1, 2, -3, 4).as_seconds).to eq(-86400 + 2*3600 - 180 + 4)
+          expect(Duration.new(-1, 2, -3, 4).as_seconds).to eq(-86400 + 2 * 3600 - 180 + 4)
         end
       end
     end

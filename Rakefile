@@ -9,9 +9,9 @@ require 'bundler/gem_tasks'
 
 ENV['FAIL_FAST'] ||= 'Y'
 
-RSpec::Core::RakeTask.new(:rspec => :compile)
+RSpec::Core::RakeTask.new(rspec: :compile)
 
-Cucumber::Rake::Task.new(:cucumber => :compile)
+Cucumber::Rake::Task.new(cucumber: :compile)
 
 desc 'Run all tests'
 task test: [:rspec, :integration, :cucumber]
@@ -29,10 +29,9 @@ else
   Rake::ExtensionTask.new('gss_api_context')
 end
 
-Rake::TestTask.new(:integration => :compile) do |t|
+Rake::TestTask.new(integration: :compile) do |t|
   t.libs.push 'lib'
   t.test_files = FileList['integration/*_test.rb',
                           'integration/authentication/*_test.rb']
   t.verbose = true
 end
-

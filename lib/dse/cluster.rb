@@ -8,10 +8,8 @@
 #++
 
 module Dse
-  # Cluster represents a DSE cluster. It serves as a
-  # {Dse::Session session factory} and a collection of metadata. It wraps
-  # a {http://docs.datastax.com/en/developer/ruby-driver/3.0/supplemental/api/cassandra/cluster/?local=true&nav=toc Cassandra::Cluster} and exposes all of its
-  # functionality.
+  # Cluster represents a DSE cluster. It serves as a {Dse::Session session factory} and a collection of metadata.
+  # It wraps a {http://dsdocs30/api/cassandra/cluster Cassandra::Cluster} and exposes all of its functionality.
   class Cluster
     # @return [Dse::Graph::Options] default graph options used by queries on this cluster.
     attr_reader :graph_options

@@ -4,6 +4,10 @@ inherit_from: .rubocop_todo.yml
 
 AllCops:
   TargetRubyVersion: 1.9
+  Exclude:
+    - 'support/**/*'
+    - 'integration/**/*'
+    - 'features/**/*'
 
 # We shouldn't rescue Exception!
 Lint/RescueException:

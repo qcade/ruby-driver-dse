@@ -8,12 +8,12 @@
 #++
 
 module Dse
-  # A session is used to execute queries. In addition to executing standard CQL queries
-  # via the {http://docs.datastax.com/en/developer/ruby-driver/3.0/supplemental/api/cassandra/session/?local=true&nav=toc#execute-instance_method #execute} and
-  # {http://docs.datastax.com/en/developer/ruby-driver/3.0/supplemental/api/cassandra/session/?local=true&nav=toc#execute_async-instance_method #execute_async}
+  # A session is used to execute queries. In addition to executing standard CQL queries via the
+  # {http://dsdocs30/api/cassandra/session#execute-instance_method #execute} and
+  # {http://dsdocs30/api/cassandra/session#execute_async-instance_method #execute_async}
   # methods, it executes graph queries via the {#execute_graph_async} and {#execute_graph} methods.
   #
-  # @see http://docs.datastax.com/en/developer/ruby-driver/3.0/supplemental/api/cassandra/session/?local=true&nav=toc Cassandra::Session
+  # @see http://dsdocs30/api/cassandra/session Cassandra::Session
   class Session
     # @private
     def initialize(cassandra_session, graph_options, futures_factory)
@@ -38,7 +38,7 @@ module Dse
     # @option options [Cassandra::CONSISTENCIES] :graph_write_consistency write consistency level for graph statements.
     #    Overrides the standard statement consistency level
     # @return [Cassandra::Future<Cassandra::Result>]
-    # @see http://docs.datastax.com/en/developer/ruby-driver/3.0/supplemental/api/cassandra/session/?local=true&nav=toc#execute_async-instance_method
+    # @see http://dsdocs30/api/cassandra/session#execute_async-instance_method
     #   Cassandra::Session::execute_async for all of the core options.
     def execute_graph_async(graph_statement, options = {})
       # Make our own copy of the options. The caller might want to re-use the options they provided, and we're

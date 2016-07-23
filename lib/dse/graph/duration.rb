@@ -103,7 +103,7 @@ module Dse
 
       # @return [Float] this {Duration} object converted to seconds
       def as_seconds
-        @seconds + @minutes*60 + @hours*3600 + @days*86400
+        @seconds + @minutes * 60 + @hours * 3600 + @days * 86400
       end
 
       # @private
