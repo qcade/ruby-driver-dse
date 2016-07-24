@@ -79,6 +79,7 @@ module Dse
       end
 
       # @private
+      # rubocop:disable Style/AccessorMethodName
       def set_timeout(new_timeout)
         @timeout = new_timeout
         if @timeout
@@ -98,8 +99,8 @@ module Dse
         string_key = stringify(key)
         if string_key == 'timeout'
           set_timeout(value)
-        else
-          @real_options[stringify(key)] = value if value
+        elsif value
+          @real_options[stringify(key)] = value
         end
         self
       end

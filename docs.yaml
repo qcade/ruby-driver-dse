@@ -16,6 +16,7 @@ sections:
     directory: ['lib', 'spec']
     namespace: Dse
 rewrites:
+  'http://dsdocs30': 'http://docs.datastax.com/en/developer/ruby-driver/3.0/supplemental'
 links:
   - title: Code
     href:  https://github.com/datastax/ruby-driver/

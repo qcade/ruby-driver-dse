@@ -111,7 +111,7 @@ module Dse
       def to_s
         "Exterior ring: #{@rings.first}\n" \
           "Interior rings:\n    " +
-            interior_rings.join("\n    ")
+          interior_rings.join("\n    ")
       end
 
       # @private
