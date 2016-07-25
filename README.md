@@ -30,6 +30,22 @@ This driver exposes the following features of DSE 5.0:
 The driver is named dse-driver on rubygems.org and can easily be installed with Bundler or the gem program. It will
 download the appropriate Cassandra driver as well.
 
+## Upgrade
+The driver is intended to have the same look and feel as the core driver to make upgrading from the core driver
+trivial. The only change is to replace references to the <code>Cassandra</code> module with <code>Dse</code> when
+creating the cluster object:
+
+```ruby
+require 'dse'
+
+# This returns a Dse::Cluster instance
+cluster = Dse.cluster
+
+# This returns a Dse::Session instance
+session = cluster.connect
+rs = session.execute('select * from system.local')
+```
+
 ## Graph
 The DSE Graph service processes graph queries written in the [Gremlin](https://github.com/tinkerpop/gremlin/wiki) language.
 `Session#execute_graph` and `Session#execute_graph_async` are responsible for transmitting graph queries to DSE graph.
