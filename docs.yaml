@@ -26,4 +26,4 @@ links:
     href:  https://datastax-oss.atlassian.net/browse/RUBY/
 versions:
   - name: v1.0.0
-    ref: 2e7dfced4366fd0989b433540347f4902fc5abb2
+    ref: 1fe2891cd96844acb70bc23c27c2890b85c57f93
