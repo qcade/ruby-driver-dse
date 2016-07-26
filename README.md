@@ -1,4 +1,4 @@
-# Ruby Driver for DataStax Enterprise
+# DataStax Enterprise Ruby Driver
 
 *NOTE: The DataStax Enterprise Ruby Driver can be used solely with DataStax Enterprise. Please consult [the license](http://www.datastax.com/terms/datastax-dse-driver-license-terms).*
 
