@@ -8,5 +8,5 @@
 #++
 
 module Dse
-  VERSION = '1.0.0.rc.2'.freeze
+  VERSION = '1.0.0'.freeze
 end

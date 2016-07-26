@@ -1,4 +1,4 @@
-master
+1.0.0
 
 Features:
 * Added Kerberos support for JRuby.
