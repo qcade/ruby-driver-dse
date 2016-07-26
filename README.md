@@ -46,6 +46,10 @@ session = cluster.connect
 rs = session.execute('select * from system.local')
 ```
 
+## Compatibility
+Although this driver exposes new features introduced in DSE 5.0, it is fully compatible and supported for use with
+previous versions of DSE. 
+
 ## Graph
 The DSE Graph service processes graph queries written in the [Gremlin](https://github.com/tinkerpop/gremlin/wiki) language.
 `Session#execute_graph` and `Session#execute_graph_async` are responsible for transmitting graph queries to DSE graph.
