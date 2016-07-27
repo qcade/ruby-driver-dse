@@ -12,7 +12,7 @@ require 'json'
 if RUBY_ENGINE == 'jruby'
   require 'challenge_evaluator'
 else
-  require 'gss_api_context'
+  require 'gss_api_context/gss_api_context'
 end
 
 require 'cassandra'
